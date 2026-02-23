@@ -1,0 +1,17 @@
+/* CSS Reset & Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #f5f7f9;
+  color: #1c1c1c;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
