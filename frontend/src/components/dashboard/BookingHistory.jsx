@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plane, Clock, MapPin, Ticket, ChevronLeft, Star, CreditCard } from 'lucide-react';
+import { Plane, Clock, MapPin, Ticket, ChevronLeft, Star, CreditCard, Mail } from 'lucide-react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import BookingDetail from './BookingDetail'
@@ -175,6 +175,37 @@ const BookingHistory = ({ user, onBack }) => {
                                         <CreditCard size={12} />
                                         {booking.paymentStatus === 'paid' ? 'LUNAS' : 'BELUM BAYAR'}
                                     </div>
+
+                                    {/* Ticket Actions */}
+                                    {booking.paymentStatus === 'paid' && (
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    window.open(`http://localhost:3333/api/bookings/${booking.bookingId}/pdf`, '_blank');
+                                                }}
+                                                style={{ ...styles.actionBtn, background: '#f0f9ff', color: '#0369a1', borderColor: '#bae6fd' }}
+                                                title="Download PDF"
+                                            >
+                                                <Ticket size={14} /> PDF
+                                            </button>
+                                            <button
+                                                onClick={async (e) => {
+                                                    e.stopPropagation();
+                                                    try {
+                                                        await axios.post(`http://localhost:3333/api/bookings/${booking.bookingId}/send-email`);
+                                                        alert('Tiket sedang dikirim ke email Anda! 📧');
+                                                    } catch (err) {
+                                                        alert('Gagal mengirim email. Silakan coba lagi.');
+                                                    }
+                                                }}
+                                                style={{ ...styles.actionBtn, background: '#f5f3ff', color: '#5b21b6', borderColor: '#ddd6fe' }}
+                                                title="Kirim ke Email"
+                                            >
+                                                <Mail size={14} /> Email
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                                 {/* Review Button - show for arrived flights */}
                                 {status?.name === 'Arrived' && (
@@ -274,6 +305,14 @@ const styles = {
         color: '#92400e', fontWeight: 800, fontSize: 13, cursor: 'pointer',
         justifyContent: 'center', transition: 'all 0.15s',
     },
+    actionBtn: {
+        display: 'flex', alignItems: 'center', gap: 6,
+        padding: '6px 12px', borderRadius: 8,
+        border: '1.5px solid #e2e8f0',
+        fontWeight: 700, fontSize: 12, cursor: 'pointer',
+        transition: 'all 0.15s',
+        '&:hover': { transform: 'translateY(-1px)', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }
+    }
 };
 
 export default BookingHistory;

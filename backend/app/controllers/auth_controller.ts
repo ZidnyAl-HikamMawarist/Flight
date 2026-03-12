@@ -1,6 +1,7 @@
 import User from '#models/user'
 import { registerValidator, loginValidator } from '#validators/auth'
 import type { HttpContext } from '@adonisjs/core/http'
+import app from '@adonisjs/core/services/app'
 
 export default class AuthController {
     /**
@@ -75,6 +76,44 @@ export default class AuthController {
             await user.save()
             return response.ok({ message: 'Profil berhasil diperbarui', user })
         } catch {
+            return response.unauthorized({ message: 'Belum login' })
+        }
+    }
+
+    /**
+     * Upload avatar user
+     */
+    async uploadAvatar({ auth, request, response }: HttpContext) {
+        try {
+            const user = auth.getUserOrFail()
+            const avatar = request.file('avatar', {
+                size: '2mb',
+                extnames: ['jpg', 'png', 'jpeg']
+            })
+
+            if (!avatar) {
+                return response.badRequest({ message: 'File tidak ditemukan' })
+            }
+
+            if (!avatar.isValid) {
+                return response.badRequest({ message: avatar.errors[0].message })
+            }
+
+            const fileName = `${new Date().getTime()}.${avatar.extname}`
+            await avatar.move(app.makePath('public/uploads'), {
+                name: fileName,
+                overwrite: true
+            })
+
+            user.avatarUrl = `/uploads/${fileName}`
+            await user.save()
+
+            return response.ok({
+                message: 'Avatar berhasil diunggah',
+                user
+            })
+        } catch (error) {
+            console.error(error)
             return response.unauthorized({ message: 'Belum login' })
         }
     }

@@ -138,7 +138,12 @@ const BookingView = ({ flight, onBack, user, passengersCount }) => {
 
     // Calculate min price per class for display
     const priceByClass = {};
-    const classColors = { 'Business': '#7c3aed', 'Economy': '#0ea5e9' }; // Purple / Sky Blue
+    const classColors = {
+        'First Class': '#f59e0b', // Gold
+        'Business': '#7c3aed',     // Purple 
+        'Premium Economy': '#10b981', // Emerald
+        'Economy': '#0ea5e9'       // Sky
+    };
 
     seats.forEach(s => {
         if (!priceByClass[s.className] || s.price < priceByClass[s.className]) {
@@ -223,6 +228,15 @@ const BookingView = ({ flight, onBack, user, passengersCount }) => {
                         <div style={styles.legendItem}><div style={{ ...styles.legendColor, backgroundColor: '#fff', border: '1px solid #ddd' }}></div> Tersedia</div>
                         <div style={styles.legendItem}><div style={{ ...styles.legendColor, backgroundColor: '#ddd' }}></div> Terisi</div>
                         <div style={styles.legendItem}><div style={{ ...styles.legendColor, backgroundColor: '#0194f3' }}></div> Terpilih</div>
+                    </div>
+
+                    <div style={{ ...styles.legend, marginTop: 10 }}>
+                        {Object.entries(classColors).map(([name, color]) => (
+                            <div key={name} style={styles.legendItem}>
+                                <div style={{ ...styles.legendColor, backgroundColor: color }}></div>
+                                {name}
+                            </div>
+                        ))}
                     </div>
                 </div>
 
@@ -315,22 +329,31 @@ const BookingView = ({ flight, onBack, user, passengersCount }) => {
 };
 
 const SeatButton = ({ seat, selected, onToggle }) => {
-    const classColor = seat.className === 'Business' ? '#7c3aed' : '#0ea5e9';
+    const classColors = {
+        'First Class': '#f59e0b',
+        'Business': '#7c3aed',
+        'Premium Economy': '#10b981',
+        'Economy': '#0ea5e9'
+    };
+    const classColor = classColors[seat.className] || '#64748b';
     return (
         <button
             disabled={!seat.isAvailable}
             onClick={onToggle}
             style={{
                 ...styles.seat,
-                backgroundColor: !seat.isAvailable ? theme.colors.border : (selected ? classColor : theme.colors.surface),
-                color: selected ? '#fff' : (seat.isAvailable ? classColor : theme.colors.textMuted),
-                border: selected ? `2px solid ${classColor}` : `1px solid ${!seat.isAvailable ? theme.colors.border : classColor}`,
+                backgroundColor: !seat.isAvailable ? '#e2e8f0' : (selected ? classColor : theme.colors.surface),
+                color: selected ? '#fff' : (!seat.isAvailable ? '#64748b' : classColor),
+                border: selected ? `2px solid ${classColor}` : `1px solid ${!seat.isAvailable ? '#cbd5e1' : classColor}`,
                 cursor: !seat.isAvailable ? 'not-allowed' : 'pointer',
-                opacity: !seat.isAvailable ? 0.5 : 1
+                opacity: 1, // Keep initials visible
+                boxShadow: !seat.isAvailable ? 'none' : (selected ? `0 0 10px ${classColor}40` : 'none'),
+                fontSize: !seat.isAvailable ? '12px' : '10px',
+                fontWeight: !seat.isAvailable ? '800' : '700'
             }}
-            title={`Seat ${seat.seatId} - ${seat.className} - Rp ${(seat.price || 0).toLocaleString('id-ID')}`}
+            title={!seat.isAvailable ? `Terisi oleh ${seat.passengerInitials || 'Penumpang'}` : `Seat ${seat.seatId} - ${seat.className} - Rp ${(seat.price || 0).toLocaleString('id-ID')}`}
         >
-            {seat.seatId}
+            {seat.isAvailable ? seat.seatId : (seat.passengerInitials || 'X')}
         </button>
     );
 };

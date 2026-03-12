@@ -9,10 +9,18 @@
 
 import router from '@adonisjs/core/services/router'
 
+import app from '@adonisjs/core/services/app'
+
 router.get('/', async () => {
   return {
     hello: 'world',
   }
+})
+
+// Serve static files from public directory
+router.get('/uploads/*', ({ request, response }) => {
+  const filePath = request.url().replace('/uploads', '')
+  return response.download(app.makePath('public/uploads', filePath))
 })
 
 
@@ -21,6 +29,13 @@ const FlightsController = () => import('#controllers/flights_controller')
 const BookingsController = () => import('#controllers/bookings_controller')
 const AdminController = () => import('#controllers/admin_controller')
 const ReviewsController = () => import('#controllers/reviews_controller')
+const SocialAuthController = () => import('#controllers/social_auth_controller')
+const TicketController = () => import('#controllers/ticket_controller')
+
+router.group(() => {
+  router.get(':provider/redirect', [SocialAuthController, 'redirect'])
+  router.get(':provider/callback', [SocialAuthController, 'callback'])
+}).prefix('api/auth/social')
 
 router.group(() => {
   router.get('flights', [FlightsController, 'index'])
@@ -33,6 +48,11 @@ router.group(() => {
   router.post('bookings/:id/pay', [BookingsController, 'pay']) // Payment simulation
   // Reviews (public read)
   router.get('flights/:flightCall/reviews', [ReviewsController, 'index'])
+
+  // Ticket endpoints
+  router.get('bookings/:id/qr', [TicketController, 'generateQR'])
+  router.get('bookings/:id/pdf', [TicketController, 'downloadPDF'])
+  router.post('bookings/:id/send-email', [TicketController, 'sendEmail'])
 }).prefix('api')
 
 // Review routes (require auth)
@@ -68,6 +88,14 @@ router.group(() => {
     }
   })
   router.put('profile', [AuthController, 'updateProfile']).use(async ({ auth, response }, next) => {
+    try {
+      await auth.authenticate()
+      return next()
+    } catch {
+      return response.unauthorized({ message: 'Harus login dulu' })
+    }
+  })
+  router.post('upload-avatar', [AuthController, 'uploadAvatar']).use(async ({ auth, response }, next) => {
     try {
       await auth.authenticate()
       return next()

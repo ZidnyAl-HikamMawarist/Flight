@@ -69,8 +69,7 @@ export default class AdminController {
     }
 
     async flightStore({ request, response }: HttpContext) {
-        // Accept optional aircraftId to auto-generate seat prices
-        const { flightCall, origin, destination, departureTime, arrivalTime, statusId, aircraftId } = request.all()
+        const { flightCall, origin, destination, departureTime, arrivalTime, statusId, aircraftId, economyPrice, premiumPrice, businessPrice, firstPrice } = request.all()
 
         const schedule = await Schedule.create({
             originIataAirportCode: origin,
@@ -83,17 +82,33 @@ export default class AdminController {
             flightCall,
             scheduleId: schedule.scheduleId,
             flightStatusId: statusId,
+            aircraftId: aircraftId
         })
 
         if (aircraftId) {
-            // fetch seats for aircraft and create flight seat price entries
             const seats = await AircraftSeat.query().where('aircraft_id', aircraftId)
-            // load travel class price mapping (fallbacks)
-            const business = await TravelClass.findBy('name', 'Business')
+            const classes = await TravelClass.all()
+            const classMap = classes.reduce((acc, c) => ({ ...acc, [c.name]: c.travelClassId }), {} as Record<string, number>)
 
             for (const s of seats) {
+                const rowMatch = s.seatId.match(/^\d+/)
+                const row = rowMatch ? parseInt(rowMatch[0]) : 1
+                const col = s.seatId.slice(-1).toUpperCase()
+
+                let positionBonus = 0
+                if (['A', 'F'].includes(col)) positionBonus = 50000
+                else if (['C', 'D'].includes(col)) positionBonus = 20000
+
+                const rowBonus = (30 - row) * 2000
+
                 // set default prices based on travel class
-                const price = s.travelClassId === business?.travelClassId ? 150 : 50
+                let basePrice = 500000 // default economy
+                if (s.travelClassId === classMap['First Class']) basePrice = firstPrice || 12000000
+                else if (s.travelClassId === classMap['Business']) basePrice = businessPrice || 3500000
+                else if (s.travelClassId === classMap['Premium Economy']) basePrice = premiumPrice || 1500000
+                else basePrice = economyPrice || 750000
+
+                let price = basePrice + positionBonus + rowBonus
 
                 await FlightSeatPrice.updateOrCreate(
                     {
@@ -113,7 +128,7 @@ export default class AdminController {
 
     async flightUpdate({ params, request, response }: HttpContext) {
         const flightCall = params.flightCall
-        const { origin, destination, departureTime, arrivalTime, statusId, aircraftId } = request.all()
+        const { origin, destination, departureTime, arrivalTime, statusId, aircraftId, economyPrice, premiumPrice, businessPrice, firstPrice } = request.all()
 
         const flight = await Flight.findOrFail(flightCall)
 
@@ -128,16 +143,36 @@ export default class AdminController {
         // update flight status
         if (statusId) {
             flight.flightStatusId = statusId
-            await flight.save()
         }
+        if (aircraftId) {
+            flight.aircraftId = aircraftId
+        }
+        await flight.save()
 
-        // optionally regenerate seat prices if aircraftId provided
+        // optionally regenerate seat prices if aircraftId or prices provided
         if (aircraftId) {
             const seats = await AircraftSeat.query().where('aircraft_id', aircraftId)
-            const business = await TravelClass.findBy('name', 'Business')
+            const classes = await TravelClass.all()
+            const classMap = classes.reduce((acc, c) => ({ ...acc, [c.name]: c.travelClassId }), {} as Record<string, number>)
 
             for (const s of seats) {
-                const price = s.travelClassId === business?.travelClassId ? 150 : 50
+                const rowMatch = s.seatId.match(/^\d+/)
+                const row = rowMatch ? parseInt(rowMatch[0]) : 1
+                const col = s.seatId.slice(-1).toUpperCase()
+
+                let positionBonus = 0
+                if (['A', 'F'].includes(col)) positionBonus = 50000
+                else if (['C', 'D'].includes(col)) positionBonus = 20000
+
+                const rowBonus = (30 - row) * 2000
+
+                let basePrice = 500000
+                if (s.travelClassId === classMap['First Class']) basePrice = firstPrice || 12000000
+                else if (s.travelClassId === classMap['Business']) basePrice = businessPrice || 3500000
+                else if (s.travelClassId === classMap['Premium Economy']) basePrice = premiumPrice || 1500000
+                else basePrice = economyPrice || 750000
+
+                let price = basePrice + positionBonus + rowBonus
                 await FlightSeatPrice.updateOrCreate(
                     {
                         flightCall: flight.flightCall,
@@ -207,14 +242,35 @@ export default class AdminController {
     async aircraftSeats({ params, response }: HttpContext) {
         const aircraftId = params.aircraftId
         const seats = await AircraftSeat.query().where('aircraft_id', aircraftId)
-        
+
         // Mock availability and price for demo
-        const seatsWithAvailability = seats.map(seat => ({
-            ...seat.toJSON(),
-            isAvailable: Math.random() > 0.3, // 70% available for demo
-            price: seat.travelClassId === 2 ? 150 : 50 // Assuming business class ID is 2
-        }))
-        
+        const classes = await TravelClass.all()
+        const classMap = classes.reduce((acc, c) => ({ ...acc, [c.name]: c.travelClassId }), {} as Record<string, number>)
+
+        const seatsWithAvailability = seats.map(seat => {
+            const rowMatch = seat.seatId.match(/^\d+/)
+            const row = rowMatch ? parseInt(rowMatch[0]) : 1
+            const col = seat.seatId.slice(-1).toUpperCase()
+
+            let positionBonus = 0
+            if (['A', 'F'].includes(col)) positionBonus = 50000
+            else if (['C', 'D'].includes(col)) positionBonus = 20000
+
+            const rowBonus = (30 - row) * 2000
+
+            let basePrice = 500000
+            if (seat.travelClassId === classMap['First Class']) basePrice = 12000000
+            else if (seat.travelClassId === classMap['Business']) basePrice = 3500000
+            else if (seat.travelClassId === classMap['Premium Economy']) basePrice = 1500000
+            else basePrice = 750000
+
+            return {
+                ...seat.toJSON(),
+                isAvailable: true,
+                price: basePrice + positionBonus + rowBonus
+            }
+        })
+
         return response.ok(seatsWithAvailability)
     }
 }

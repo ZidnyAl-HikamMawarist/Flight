@@ -13,6 +13,10 @@ export default class extends BaseSchema {
       table.integer('flight_status_id').unsigned()
         .references('flight_status_id')
         .inTable('flight_statuses')
+      table.integer('aircraft_id').unsigned()
+        .references('aircraft_id')
+        .inTable('aircrafts')
+        .onDelete('SET NULL')
 
       table.timestamp('created_at')
       table.timestamp('updated_at')

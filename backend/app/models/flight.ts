@@ -15,6 +15,9 @@ export default class Flight extends BaseModel {
   @column({ columnName: 'flight_status_id' })
   declare flightStatusId: number
 
+  @column({ columnName: 'aircraft_id' })
+  declare aircraftId: number
+
   @belongsTo(() => Schedule, { foreignKey: 'scheduleId' })
   declare schedule: BelongsTo<typeof Schedule>
 

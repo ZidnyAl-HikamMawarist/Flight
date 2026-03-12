@@ -29,6 +29,15 @@ export default class Booking extends BaseModel {
   @column.dateTime({ columnName: 'paid_at' })
   declare paidAt: DateTime | null
 
+  @column({ columnName: 'booking_code' })
+  declare bookingCode: string | null
+
+  @column({ columnName: 'ticket_number' })
+  declare ticketNumber: string | null
+
+  @column({ columnName: 'sequence_number' })
+  declare sequenceNumber: number | null
+
   @belongsTo(() => Flight, { foreignKey: 'flightCall' })
   declare flight: BelongsTo<typeof Flight>
 

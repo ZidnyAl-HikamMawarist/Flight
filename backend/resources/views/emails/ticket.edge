@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px; }
+        .header { background: #0ea5e9; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { padding: 20px; }
+        .footer { font-size: 12px; color: #777; text-align: center; padding: 20px; }
+        .btn { display: inline-block; padding: 10px 20px; background: #2563eb; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Halo, {{ booking.client.firstName }}!</h1>
+        </div>
+        <div class="content">
+            <p>Terima kasih telah memesan penerbangan dengan <strong>My Flight</strong>.</p>
+            <p>Pembayaran Anda untuk rute <strong>{{ booking.flightCall }}</strong> telah kami terima. Berikut adalah kode booking (PNR) Anda:</p>
+            <h2 style="text-align: center; letter-spacing: 5px; color: #0ea5e9;">{{ booking.bookingCode }}</h2>
+            <p>Kami telah melampirkan <strong>E-Ticket PDF</strong> pada email ini. Harap simpan atau cetak dokumen tersebut untuk keperluan check-in di bandara.</p>
+            <p>Detail Perjalanan:</p>
+            <ul>
+                <li>Maskapai/No: {{ booking.flightCall }}</li>
+                <li>Penerbangan: {{ booking.flight.schedule.originAirport.city }} &rarr; {{ booking.flight.schedule.destinationAirport.city }}</li>
+                <li>Nomor Kursi: {{ booking.seatId }}</li>
+            </ul>
+        </div>
+        <div class="footer">
+            &copy; 2026 My Flight Booking System. Have a safe flight!
+        </div>
+    </div>
+</body>
+</html>

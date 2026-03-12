@@ -32,6 +32,12 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column({ columnName: 'avatar_url' })
   declare avatarUrl: string | null
 
+  @column({ columnName: 'google_id' })
+  declare googleId: string | null
+
+  @column({ columnName: 'apple_id' })
+  declare appleId: string | null
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

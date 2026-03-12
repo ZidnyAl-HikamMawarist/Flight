@@ -4,18 +4,19 @@ import TravelClass from '#models/travel_class'
 
 export default class extends BaseSeeder {
   async run() {
-    await FlightStatus.createMany([
-      { name: 'Scheduled' },
-      { name: 'Delayed' },
-      { name: 'Departed' },
-      { name: 'Arrived' },
-      { name: 'Cancelled' },
-    ])
+    const statuses = ['Scheduled', 'Delayed', 'Departed', 'Arrived', 'Cancelled']
+    for (const name of statuses) {
+      await FlightStatus.updateOrCreate({ name }, { name })
+    }
 
-    await TravelClass.createMany([
+    const classes = [
       { name: 'Economy', description: 'Standard economy class' },
+      { name: 'Premium Economy', description: 'Extra legroom and comfort' },
       { name: 'Business', description: 'Premium business class' },
       { name: 'First Class', description: 'Luxury first class' },
-    ])
+    ]
+    for (const c of classes) {
+      await TravelClass.updateOrCreate({ name: c.name }, c)
+    }
   }
 }

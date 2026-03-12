@@ -6,6 +6,8 @@ import { theme, ui } from '../../theme';
 import BookingView from './BookingView';
 import BookingHistory from './BookingHistory';
 import UserProfile from './UserProfile';
+import Navbar from '../Navbar';
+import Footer from '../Footer';
 import { FlightReviews } from '../reviews/ReviewForm';
 import useIsMobile from '../../hooks/useIsMobile';
 
@@ -350,19 +352,15 @@ const FlightSearch = ({ onLogout, user, token, onUserUpdate }) => {
     if (showHistory) {
         return (
             <div style={styles.container}>
-                <nav style={styles.nav}>
-                    <div style={styles.navInner}>
-                        <div style={styles.logo}>
-                            <Plane size={24} color="#0194f3" strokeWidth={3} />
-                            <span style={styles.logoText}>FlightBooking</span>
-                        </div>
-                        <div style={styles.navRight}>
-                            <button onClick={() => setShowProfile(true)} style={styles.historyBtn}><User size={16} /> Profil</button>
-                            <button onClick={onLogout} style={styles.logoutBtn}>Logout</button>
-                        </div>
-                    </div>
-                </nav>
+                <Navbar
+                    user={user}
+                    onLogout={onLogout}
+                    onProfile={() => setShowProfile(true)}
+                    onHistory={() => setShowHistory(true)}
+                    onGoHome={() => setShowHistory(false)}
+                />
                 <BookingHistory user={user} onBack={() => setShowHistory(false)} />
+                <Footer />
             </div>
         )
     }
@@ -370,27 +368,20 @@ const FlightSearch = ({ onLogout, user, token, onUserUpdate }) => {
     if (selectedFlight) {
         return (
             <div style={styles.container}>
-                <nav style={styles.nav}>
-                    <div style={styles.navInner}>
-                        <div style={styles.logo}>
-                            <Plane size={24} color="#0194f3" strokeWidth={3} />
-                            <span style={styles.logoText}>FlightBooking</span>
-                        </div>
-                        <div style={styles.navRight}>
-                            <button onClick={() => setShowHistory(true)} style={styles.historyBtn}>
-                                <Ticket size={16} /> Riwayat Pesanan
-                            </button>
-                            <button onClick={() => setShowProfile(true)} style={styles.historyBtn}><User size={16} /> Profil</button>
-                            <button onClick={onLogout} style={styles.logoutBtn}>Logout</button>
-                        </div>
-                    </div>
-                </nav>
+                <Navbar
+                    user={user}
+                    onLogout={onLogout}
+                    onProfile={() => setShowProfile(true)}
+                    onHistory={() => setShowHistory(true)}
+                    onGoHome={() => setSelectedFlight(null)}
+                />
                 <BookingView
                     flight={selectedFlight}
                     user={user}
                     passengersCount={searchParams.passengers}
                     onBack={() => setSelectedFlight(null)}
                 />
+                <Footer />
             </div>
         )
     }
@@ -398,26 +389,13 @@ const FlightSearch = ({ onLogout, user, token, onUserUpdate }) => {
     return (
         <div style={styles.container}>
             {/* Navbar */}
-            <nav style={styles.nav}>
-                <div style={styles.navInner}>
-                    <div style={styles.logo}>
-                        <Plane size={24} color="#0194f3" strokeWidth={3} />
-                        <span style={styles.logoText}>FlightBooking</span>
-                    </div>
-                    <div style={styles.navRight}>
-                        <span style={{ ...styles.userName, display: isMobile ? 'none' : 'inline' }}>Halo, {user?.fullName}</span>
-                        <button onClick={() => setShowHistory(true)} style={styles.historyBtn}>
-                            <Ticket size={16} />
-                            <span style={{ display: isMobile ? 'none' : 'inline' }}> Riwayat</span>
-                        </button>
-                        <button onClick={() => setShowProfile(true)} style={styles.historyBtn}>
-                            <User size={16} />
-                            <span style={{ display: isMobile ? 'none' : 'inline' }}> Profil</span>
-                        </button>
-                        <button onClick={onLogout} style={styles.logoutBtn}>Logout</button>
-                    </div>
-                </div>
-            </nav>
+            <Navbar
+                user={user}
+                onLogout={onLogout}
+                onProfile={() => setShowProfile(true)}
+                onHistory={() => setShowHistory(true)}
+                onGoHome={() => { setHasSearched(false); setFlights([]); }}
+            />
 
             {/* Hero Section */}
             <header style={{ ...styles.hero, padding: isMobile ? '60px 16px 120px' : '88px 0 150px' }}>
@@ -865,6 +843,7 @@ const FlightSearch = ({ onLogout, user, token, onUserUpdate }) => {
                     </div>
                 )}
             </div>
+            <Footer />
         </div >
     );
 };

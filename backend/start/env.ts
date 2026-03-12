@@ -27,5 +27,27 @@ export default await Env.create(new URL('../', import.meta.url), {
   DB_PORT: Env.schema.number(),
   DB_USER: Env.schema.string(),
   DB_PASSWORD: Env.schema.string.optional(),
-  DB_DATABASE: Env.schema.string()
+  DB_DATABASE: Env.schema.string(),
+
+  /*
+  |----------------------------------------------------------
+  | Variables for configuring social auth
+  |----------------------------------------------------------
+  */
+  GOOGLE_CLIENT_ID: Env.schema.string.optional(),
+  GOOGLE_CLIENT_SECRET: Env.schema.string.optional(),
+  GOOGLE_CALLBACK_URL: Env.schema.string.optional(),
+
+  APPLE_CLIENT_ID: Env.schema.string.optional(),
+  APPLE_CLIENT_SECRET: Env.schema.string.optional(),
+  APPLE_CALLBACK_URL: Env.schema.string.optional(),
+  APPLE_KEY_ID: Env.schema.string.optional(),
+  APPLE_TEAM_ID: Env.schema.string.optional(),
+  APPLE_PRIVATE_KEY_PATH: Env.schema.string.optional(),
+
+  SMTP_HOST: Env.schema.string.optional(),
+  SMTP_PORT: Env.schema.number.optional(),
+  SMTP_USERNAME: Env.schema.string.optional(),
+  SMTP_PASSWORD: Env.schema.string.optional(),
+  FROM_EMAIL: Env.schema.string.optional(),
 })

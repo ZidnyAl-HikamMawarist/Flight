@@ -21,7 +21,10 @@ const AdminPanel = ({ user, onLogout }) => {
     // New airport form
     const [airportForm, setAirportForm] = useState({ iataAirportCode: '', name: '', city: '', iataCountryCode: '' });
     // New flight form
-    const [flightForm, setFlightForm] = useState({ flightCall: '', origin: '', destination: '', departureTime: '', arrivalTime: '', statusId: '', aircraftId: '' });
+    const [flightForm, setFlightForm] = useState({
+        flightCall: '', origin: '', destination: '', departureTime: '', arrivalTime: '',
+        statusId: '', aircraftId: '', economyPrice: 750000, premiumPrice: 1500000, businessPrice: 3500000, firstPrice: 12000000
+    });
 
     useEffect(() => {
         fetchStats();
@@ -137,7 +140,10 @@ const AdminPanel = ({ user, onLogout }) => {
         try {
             await axios.post('http://localhost:3333/api/admin/flights', flightForm);
             setShowModal(null);
-            setFlightForm({ flightCall: '', origin: '', destination: '', departureTime: '', arrivalTime: '', statusId: '', aircraftId: '' });
+            setFlightForm({
+                flightCall: '', origin: '', destination: '', departureTime: '', arrivalTime: '',
+                statusId: '', aircraftId: '', economyPrice: 750000, premiumPrice: 1500000, businessPrice: 3500000, firstPrice: 12000000
+            });
             fetchFlights();
             fetchStats();
         } catch (err) {
@@ -166,7 +172,10 @@ const AdminPanel = ({ user, onLogout }) => {
                 await axios.post('http://localhost:3333/api/admin/flights', flightForm);
             }
             setShowModal(null);
-            setFlightForm({ flightCall: '', origin: '', destination: '', departureTime: '', arrivalTime: '', statusId: '', aircraftId: '' });
+            setFlightForm({
+                flightCall: '', origin: '', destination: '', departureTime: '', arrivalTime: '',
+                statusId: '', aircraftId: '', economyPrice: 750000, premiumPrice: 1500000, businessPrice: 3500000, firstPrice: 12000000
+            });
             setEditingFlight(null);
             setSeats([]);
             setSelectedSeats([]);
@@ -188,7 +197,11 @@ const AdminPanel = ({ user, onLogout }) => {
             departureTime: toLocalDatetime(f.schedule?.departureTimeGmt),
             arrivalTime: toLocalDatetime(f.schedule?.arrivalTimeGmt),
             statusId: f.flightStatusId || f.status?.flightStatusId || '',
-            aircraftId: f.aircraftId || ''
+            aircraftId: f.aircraftId || '',
+            economyPrice: 750000,
+            premiumPrice: 1500000,
+            businessPrice: 3500000,
+            firstPrice: 12000000
         })
         setShowModal('flight')
         if (f.aircraftId) {
@@ -422,6 +435,26 @@ const AdminPanel = ({ user, onLogout }) => {
                                         {statuses.map(s => <option key={s.flightStatusId} value={s.flightStatusId}>{s.name}</option>)}
                                     </select>
                                 </div>
+                                <div style={styles.formRow}>
+                                    <div style={{ flex: 1 }}>
+                                        <label style={{ fontSize: 11, color: theme.colors.textMuted, marginBottom: 4, display: 'block' }}>First (Rp)</label>
+                                        <input style={styles.modalInput} type="number" value={flightForm.firstPrice} onChange={e => setFlightForm({ ...flightForm, firstPrice: parseInt(e.target.value) })} required />
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <label style={{ fontSize: 11, color: theme.colors.textMuted, marginBottom: 4, display: 'block' }}>Business (Rp)</label>
+                                        <input style={styles.modalInput} type="number" value={flightForm.businessPrice} onChange={e => setFlightForm({ ...flightForm, businessPrice: parseInt(e.target.value) })} required />
+                                    </div>
+                                </div>
+                                <div style={styles.formRow}>
+                                    <div style={{ flex: 1 }}>
+                                        <label style={{ fontSize: 11, color: theme.colors.textMuted, marginBottom: 4, display: 'block' }}>Premium (Rp)</label>
+                                        <input style={styles.modalInput} type="number" value={flightForm.premiumPrice} onChange={e => setFlightForm({ ...flightForm, premiumPrice: parseInt(e.target.value) })} required />
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <label style={{ fontSize: 11, color: theme.colors.textMuted, marginBottom: 4, display: 'block' }}>Economy (Rp)</label>
+                                        <input style={styles.modalInput} type="number" value={flightForm.economyPrice} onChange={e => setFlightForm({ ...flightForm, economyPrice: parseInt(e.target.value) })} required />
+                                    </div>
+                                </div>
 
                                 {/* Seat Selection Section */}
                                 {flightForm.aircraftId && (
@@ -449,7 +482,9 @@ const AdminPanel = ({ user, onLogout }) => {
                                                         }}
                                                     >
                                                         {s.seatId}
-                                                        <div style={{ ...styles.seatPrice, color: isSelected ? theme.colors.surface : theme.colors.textMuted }}>${s.price}</div>
+                                                        <div style={{ ...styles.seatPrice, color: isSelected ? theme.colors.surface : theme.colors.textMuted }}>
+                                                            {s.price ? `Rp ${s.price.toLocaleString('id-ID')}` : '-'}
+                                                        </div>
                                                     </button>
                                                 );
                                             })}
@@ -476,139 +511,139 @@ const styles = {
     layout: { display: 'flex', minHeight: '100vh', fontFamily: theme.fonts.primary },
 
     // Sidebar
-    sidebar: { 
-        width: '260px', 
-        background: `linear-gradient(180deg, ${theme.colors.primaryDark} 0%, ${theme.colors.primary} 100%)`, 
-        color: theme.colors.surface, 
-        display: 'flex', 
-        flexDirection: 'column', 
-        padding: '25px 15px', 
-        flexShrink: 0 
+    sidebar: {
+        width: '260px',
+        background: `linear-gradient(180deg, ${theme.colors.primaryDark} 0%, ${theme.colors.primary} 100%)`,
+        color: theme.colors.surface,
+        display: 'flex',
+        flexDirection: 'column',
+        padding: '25px 15px',
+        flexShrink: 0
     },
-    sidebarLogo: { 
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: theme.spacing.sm, 
-        fontSize: theme.typography.xl, 
-        fontWeight: theme.fontWeights.bold, 
-        padding: '0 10px 25px', 
-        borderBottom: `1px solid ${theme.colors.surface}20`, 
-        marginBottom: '25px' 
+    sidebarLogo: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: theme.spacing.sm,
+        fontSize: theme.typography.xl,
+        fontWeight: theme.fontWeights.bold,
+        padding: '0 10px 25px',
+        borderBottom: `1px solid ${theme.colors.surface}20`,
+        marginBottom: '25px'
     },
     sidebarNav: { display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 },
-    navItem: { 
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: theme.spacing.sm, 
-        padding: '12px 15px', 
-        border: 'none', 
-        color: `${theme.colors.surface}80`, 
-        cursor: 'pointer', 
-        borderRadius: theme.radius.lg, 
-        fontSize: theme.typography.sm, 
-        fontWeight: theme.fontWeights.semibold, 
-        transition: 'all 0.2s' 
+    navItem: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: theme.spacing.sm,
+        padding: '12px 15px',
+        border: 'none',
+        color: `${theme.colors.surface}80`,
+        cursor: 'pointer',
+        borderRadius: theme.radius.lg,
+        fontSize: theme.typography.sm,
+        fontWeight: theme.fontWeights.semibold,
+        transition: 'all 0.2s'
     },
     sidebarFooter: { borderTop: `1px solid ${theme.colors.surface}20`, paddingTop: theme.spacing.lg },
-    sidebarUser: { 
-        fontSize: theme.typography.xs, 
-        color: `${theme.colors.surface}60`, 
-        marginBottom: theme.spacing.sm, 
-        padding: '0 10px' 
+    sidebarUser: {
+        fontSize: theme.typography.xs,
+        color: `${theme.colors.surface}60`,
+        marginBottom: theme.spacing.sm,
+        padding: '0 10px'
     },
-    sidebarLogout: { 
-        width: '100%', 
-        padding: theme.spacing.sm, 
-        border: `1px solid ${theme.colors.surface}40`, 
-        background: 'transparent', 
-        color: theme.colors.surface, 
-        borderRadius: theme.radius.lg, 
-        cursor: 'pointer', 
-        fontWeight: theme.fontWeights.semibold 
+    sidebarLogout: {
+        width: '100%',
+        padding: theme.spacing.sm,
+        border: `1px solid ${theme.colors.surface}40`,
+        background: 'transparent',
+        color: theme.colors.surface,
+        borderRadius: theme.radius.lg,
+        cursor: 'pointer',
+        fontWeight: theme.fontWeights.semibold
     },
 
     // Main
-    main: { 
-        flex: 1, 
-        padding: '30px 40px', 
-        backgroundColor: theme.colors.background, 
-        overflowY: 'auto' 
+    main: {
+        flex: 1,
+        padding: '30px 40px',
+        backgroundColor: theme.colors.background,
+        overflowY: 'auto'
     },
-    pageTitle: { 
-        fontSize: theme.typography['2xl'], 
-        fontWeight: theme.fontWeights.bold, 
-        color: theme.colors.text, 
-        marginBottom: theme.spacing['2xl'] 
+    pageTitle: {
+        fontSize: theme.typography['2xl'],
+        fontWeight: theme.fontWeights.bold,
+        color: theme.colors.text,
+        marginBottom: theme.spacing['2xl']
     },
-    pageHeader: { 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        marginBottom: theme.spacing['2xl'] 
+    pageHeader: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: theme.spacing['2xl']
     },
 
     // Stats
     statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: theme.spacing.lg },
-    statCard: { 
+    statCard: {
         ...ui.card.base,
         padding: theme.spacing['2xl'],
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: theme.spacing.lg 
+        display: 'flex',
+        alignItems: 'center',
+        gap: theme.spacing.lg
     },
-    statIcon: { 
-        width: '56px', 
-        height: '56px', 
-        borderRadius: theme.radius.lg, 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center' 
+    statIcon: {
+        width: '56px',
+        height: '56px',
+        borderRadius: theme.radius.lg,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
     },
-    statValue: { 
-        fontSize: theme.typography['3xl'], 
-        fontWeight: theme.fontWeights.black, 
-        color: theme.colors.text 
+    statValue: {
+        fontSize: theme.typography['3xl'],
+        fontWeight: theme.fontWeights.black,
+        color: theme.colors.text
     },
-    statLabel: { 
-        fontSize: theme.typography.sm, 
-        color: theme.colors.textMuted, 
-        fontWeight: theme.fontWeights.semibold 
+    statLabel: {
+        fontSize: theme.typography.sm,
+        color: theme.colors.textMuted,
+        fontWeight: theme.fontWeights.semibold
     },
 
     // Table
-    table: { 
+    table: {
         ...ui.card.base,
-        overflow: 'hidden' 
+        overflow: 'hidden'
     },
-    tableHeader: { 
-        display: 'flex', 
-        padding: '15px 25px', 
-        backgroundColor: theme.colors.background, 
-        fontWeight: theme.fontWeights.bold, 
-        fontSize: theme.typography.sm, 
-        color: theme.colors.textMuted, 
-        borderBottom: `1px solid ${theme.colors.border}` 
+    tableHeader: {
+        display: 'flex',
+        padding: '15px 25px',
+        backgroundColor: theme.colors.background,
+        fontWeight: theme.fontWeights.bold,
+        fontSize: theme.typography.sm,
+        color: theme.colors.textMuted,
+        borderBottom: `1px solid ${theme.colors.border}`
     },
-    tableRow: { 
-        display: 'flex', 
-        padding: '15px 25px', 
-        borderBottom: `1px solid ${theme.colors.border}`, 
-        alignItems: 'center', 
-        fontSize: theme.typography.sm, 
-        color: theme.colors.text 
+    tableRow: {
+        display: 'flex',
+        padding: '15px 25px',
+        borderBottom: `1px solid ${theme.colors.border}`,
+        alignItems: 'center',
+        fontSize: theme.typography.sm,
+        color: theme.colors.text
     },
-    emptyTable: { 
-        padding: theme.spacing['3xl'], 
-        textAlign: 'center', 
-        color: theme.colors.textMuted 
+    emptyTable: {
+        padding: theme.spacing['3xl'],
+        textAlign: 'center',
+        color: theme.colors.textMuted
     },
-    statusTag: { 
-        backgroundColor: `${theme.colors.primary}20`, 
-        color: theme.colors.primary, 
-        padding: '3px 10px', 
-        borderRadius: theme.radius['2xl'], 
-        fontSize: theme.typography.xs, 
-        fontWeight: theme.fontWeights.bold 
+    statusTag: {
+        backgroundColor: `${theme.colors.primary}20`,
+        color: theme.colors.primary,
+        padding: '3px 10px',
+        borderRadius: theme.radius['2xl'],
+        fontSize: theme.typography.xs,
+        fontWeight: theme.fontWeights.bold
     },
 
     // Buttons
@@ -617,108 +652,108 @@ const styles = {
     editBtn: { ...ui.button.secondary },
 
     // Modal
-    overlay: { 
-        position: 'fixed', 
-        top: 0, 
-        left: 0, 
-        right: 0, 
-        bottom: 0, 
-        backgroundColor: 'rgba(0,0,0,0.5)', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        zIndex: 1000 
+    overlay: {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000
     },
-    modal: { 
+    modal: {
         ...ui.card.base,
-        padding: theme.spacing['2xl'], 
-        width: '90%', 
-        maxWidth: '450px', 
-        boxShadow: theme.shadows['2xl'] 
+        padding: theme.spacing['2xl'],
+        width: '90%',
+        maxWidth: '450px',
+        boxShadow: theme.shadows['2xl']
     },
-    modalHeader: { 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        marginBottom: theme.spacing['2xl'] 
+    modalHeader: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: theme.spacing['2xl']
     },
     modalForm: { display: 'flex', flexDirection: 'column', gap: theme.spacing.md },
     formRow: { display: 'flex', gap: theme.spacing.md },
     modalInput: { ...ui.input.base },
     modalSubmit: { ...ui.button.primary },
-    closeBtn: { 
-        background: 'none', 
-        border: 'none', 
-        cursor: 'pointer', 
-        color: theme.colors.textMuted 
+    closeBtn: {
+        background: 'none',
+        border: 'none',
+        cursor: 'pointer',
+        color: theme.colors.textMuted
     },
 
     // Seat Selection
-    seatSection: { 
-        marginTop: theme.spacing.lg, 
-        padding: theme.spacing.lg, 
-        backgroundColor: theme.colors.background, 
-        borderRadius: theme.radius.lg, 
-        border: `1px solid ${theme.colors.border}` 
+    seatSection: {
+        marginTop: theme.spacing.lg,
+        padding: theme.spacing.lg,
+        backgroundColor: theme.colors.background,
+        borderRadius: theme.radius.lg,
+        border: `1px solid ${theme.colors.border}`
     },
-    seatSectionHeader: { 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        marginBottom: theme.spacing.lg 
+    seatSectionHeader: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: theme.spacing.lg
     },
-    seatSectionTitle: { 
-        fontSize: theme.typography.base, 
-        fontWeight: theme.fontWeights.bold, 
-        color: theme.colors.text, 
-        margin: 0 
+    seatSectionTitle: {
+        fontSize: theme.typography.base,
+        fontWeight: theme.fontWeights.bold,
+        color: theme.colors.text,
+        margin: 0
     },
-    seatBadge: { 
-        backgroundColor: `${theme.colors.primary}20`, 
-        color: theme.colors.primary, 
-        padding: '4px 12px', 
-        borderRadius: theme.radius['2xl'], 
-        fontSize: theme.typography.xs, 
-        fontWeight: theme.fontWeights.bold 
+    seatBadge: {
+        backgroundColor: `${theme.colors.primary}20`,
+        color: theme.colors.primary,
+        padding: '4px 12px',
+        borderRadius: theme.radius['2xl'],
+        fontSize: theme.typography.xs,
+        fontWeight: theme.fontWeights.bold
     },
-    seatGrid: { 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(6, 1fr)', 
-        gap: theme.spacing.sm, 
-        marginBottom: theme.spacing.lg 
+    seatGrid: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(6, 1fr)',
+        gap: theme.spacing.sm,
+        marginBottom: theme.spacing.lg
     },
-    seat: { 
-        padding: '10px 5px', 
-        borderRadius: theme.radius.md, 
-        textAlign: 'center', 
-        fontWeight: theme.fontWeights.bold, 
-        fontSize: theme.typography.xs, 
-        transition: 'all 0.2s', 
-        border: `1px solid ${theme.colors.border}` 
+    seat: {
+        padding: '10px 5px',
+        borderRadius: theme.radius.md,
+        textAlign: 'center',
+        fontWeight: theme.fontWeights.bold,
+        fontSize: theme.typography.xs,
+        transition: 'all 0.2s',
+        border: `1px solid ${theme.colors.border}`
     },
-    seatPrice: { 
-        fontSize: theme.typography.xs, 
-        fontWeight: theme.fontWeights.normal, 
-        marginTop: '2px' 
+    seatPrice: {
+        fontSize: theme.typography.xs,
+        fontWeight: theme.fontWeights.normal,
+        marginTop: '2px'
     },
-    seatLegend: { 
-        display: 'flex', 
-        gap: theme.spacing.md, 
-        justifyContent: 'center', 
-        flexWrap: 'wrap' 
+    seatLegend: {
+        display: 'flex',
+        gap: theme.spacing.md,
+        justifyContent: 'center',
+        flexWrap: 'wrap'
     },
-    seatLegendItem: { 
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: theme.spacing.xs, 
-        fontSize: theme.typography.xs, 
-        color: theme.colors.textMuted 
+    seatLegendItem: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: theme.spacing.xs,
+        fontSize: theme.typography.xs,
+        color: theme.colors.textMuted
     },
-    seatLegendColor: { 
-        width: '12px', 
-        height: '12px', 
-        borderRadius: theme.radius.sm, 
-        border: `1px solid ${theme.colors.border}` 
+    seatLegendColor: {
+        width: '12px',
+        height: '12px',
+        borderRadius: theme.radius.sm,
+        border: `1px solid ${theme.colors.border}`
     },
 };
 

@@ -1,49 +1,38 @@
-# 🛫 Flight Booking System Development Plan (Traveloka Clone)
+# 🛫 Flight Booking System - NEW PRO PLAN (E-Ticket Pro Edition)
 
-Rencana pengembangan ini dibagi menjadi beberapa fase untuk memastikan pondasi yang kuat sebelum masuk ke fitur yang lebih kompleks.
+## Fase 7: Smart E-Ticket System (PRO MODE) 🚀
+*Fokus: Transformasi dari aplikasi booking biasa menjadi sistem reservasi standar industri.*
 
-## Fase 1: Dasar & Infrastruktur (SELESAI ✅)
-- [x] Setup Project AdonisJS (Backend) & React (Frontend).
-- [x] Desain Database (ERD).
-- [x] Implementasi Migrasi & Model.
-- [x] Seeding data awal (Master data: Status, Class).
+### 1. Infrastruktur Data E-Ticket
+- [ ] **PNR & Ticket No Generator**: Buat fungsi di backend untuk generate 6 karakter Alphanumeric PNR (Kode Booking) dan 13 digit nomor tiket unik secara otomatis saat booking sukses.
+- [ ] **Check-in Sequence Logic**: Sistem untuk mencatat urutan check-in (Sequence Number/SEQ) untuk setiap kursi di penerbangan tersebut.
 
-## Fase 2: Autentikasi & User Management (SELESAI ✅)
-*Fokus: Mengamankan sistem dan mengelola pengguna.*
-- [x] Implementasi Register & Login API (menggunakan AdonisJS Auth).
-- [x] Middleware/Guard untuk membatasi akses (Logout & Auth protection).
-- [x] UI Login & Register di Frontend.
-- [x] Profil pengguna (Ambil data & Logout).
+### 2. Generator QR Code Dinamis (IATA Standard)
+- [ ] **Backend QR Service**: Implementasi generator QR Code di server (menggunakan library `qrcode`) yang didalamnya berisi data terenkripsi:
+    - **Identitas**: Nama Belakang/Nama Depan.
+    - **Detail Penerbangan**: Nomor terbang, Airline Code (GA, ID, dll), Bandara Origin & Destination.
+    - **PNR**: 6 digit unik.
+    - **Seat & SEQ**: Nomor kursi dan urutan masuk.
+    - **E-Ticket No**: 13 digit bukti bayar.
+- [ ] **Secure QR**: Pastikan QR code digenerate di server agar data tidak bisa dimanipulasi dari frontend.
 
-## Fase 3: Pencarian Penerbangan (SELESAI ✅)
-*Fokus: Menampilkan jadwal terbang kepada pengguna.*
-- [x] **Data Seeding Lanjutan:** Mengisi data bandara (Airports), Pesawat (Aircrafts), dan Jadwal (Schedules) yang realistis.
-- [x] **Flight Search API:** Endpoint untuk mencari penerbangan berdasarkan `asal`, `tujuan`, `tanggal`, dan `kelas`.
-- [x] **Frontend Search Box:** Membuat UI pencarian yang elegan (seperti Traveloka).
-- [x] **Flight Result Page:** Menampilkan daftar hasil pencarian dengan filter (Harga, Waktu, Maskapai).
+### 3. Integrated PDF Generator
+- [ ] **Professional Ticket Template**: Membuat desain template tiket PDF yang elegan, lengkap dengan logo maskapai, garis potong boarding pass, dan penempatan QR code yang pas.
+- [ ] **PDF Engine Implementation**: Menggunakan engine (seperti `puppeteer` atau `pdfkit`) di AdonisJS untuk merender template HTML menjadi file PDF siap cetak.
+- [ ] **Frontend Download**: Menambahkan tombol "Download E-Ticket" di dashboard user dan riwayat pesanan.
 
-## Fase 4: Proses Booking & Kursi (SELESAI ✅)
-*Fokus: Logika pemilihan kursi dan pembuatan reservasi.*
-- [x] **Seat Availability:** Logika untuk mengecek kursi mana yang masih kosong di pesawat tertentu.
-- [x] **Seat Selection UI:** Tampilan visual denah kursi pesawat di Frontend.
-- [x] **Booking API:** Endpoint untuk menyimpan reservasi (menghubungkan `Client`, `Flight`, dan `Seat`).
-- [x] **Group Booking Support:** Mendukung pemilihan banyak kursi sekaligus sesuai jumlah penumpang.
-- [x] **Validasi:** Mencegah satu kursi dipesan oleh dua orang di waktu yang sama.
-
-## Fase 5: Dashboard & Riwayat Transaksi (SELESAI ✅)
-*Fokus: Menampilkan hasil booking ke pengguna.*
-- [x] **Booking Details:** Halaman ringkasan setelah melakukan pemesanan (E-ticket mockup).
-- [x] **Riwayat Pesanan:** Daftar semua penerbangan yang pernah dipesan oleh user.
-
-## Fase 6: Admin Panel (SELESAI ✅)
-*Fokus: Internal tool untuk admin.*
-- [x] Manajemen Bandara & Pesawat.
-- [x] Penjadwalan Penerbangan (CRUD Schedules).
-- [x] Monitoring Booking yang masuk.
+### 4. Automated Email System (Traveloka Style)
+- [ ] **Mail Server Setup**: Konfigurasi `@adonisjs/mail` untuk pengiriman email otomatis.
+- [ ] **Auto-Send Trigger**: Begitu pembayaran dikonfirmasi/simulasi berhasil, sistem otomatis mengirim email berisi:
+    *   Ringkasan perjalanan di body email.
+    *   E-Ticket PDF sebagai file lampiran (attachment).
+- [ ] **Responsive Email Design**: Tutorial visual email yang cantik agar tetap rapi dibuka di HP atau Laptop.
 
 ---
 
-## Tips Pengembangan
-1. **API First:** Selesaikan endpoint di Backend dulu, test menggunakan Postman, baru pindah ke Frontend.
-2. **Atomic Commits:** Lakukan commit git setiap kali satu poin di atas selesai.
-3. **Clean Design:** Gunakan sistem komponen di React agar UI konsisten.
+## 🛠️ Tooling & Library:
+- **Backend**: `@adonisjs/mail`, `qrcode` (generator), `puppeteer` (PDF converter).
+- **Frontend**: Handling PDF blob download.
+
+---
+*Rencana ini sekarang menjadi prioritas utama pengembangan.*

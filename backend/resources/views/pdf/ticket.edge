@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>E-Ticket - {{ booking.bookingCode }}</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            margin: 0;
+            padding: 40px;
+            color: #1e293b;
+            background: #fff;
+        }
+
+        .ticket-container {
+            border: 2px solid #e2e8f0;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+            color: white;
+            padding: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-logo {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-pnr {
+            text-align: right;
+        }
+
+        .pnr-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            opacity: 0.8;
+            font-weight: 600;
+        }
+
+        .pnr-code {
+            font-size: 28px;
+            font-weight: 800;
+            display: block;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .route-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .airport-code {
+            font-size: 48px;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0;
+        }
+
+        .city-name {
+            font-size: 14px;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            border-top: 1px dashed #e2e8f0;
+            padding-top: 30px;
+        }
+
+        .detail-item {
+            margin-bottom: 5px;
+        }
+
+        .detail-label {
+            font-size: 10px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .detail-value {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .qr-section {
+            background: #f8fafc;
+            padding: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .qr-info {
+            flex: 1;
+        }
+
+        .qr-image {
+            width: 140px;
+            height: 140px;
+            background: white;
+            padding: 10px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 11px;
+            color: #94a3b8;
+        }
+
+        .badge-seq {
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 4px 12px;
+            border-radius: 99px;
+            font-size: 12px;
+            font-weight: 800;
+        }
+    </style>
+</head>
+<body>
+    <div class="ticket-container">
+        <div class="header">
+            <div class="header-logo">
+                ✈️ MY FLIGHT
+            </div>
+            <div class="header-pnr">
+                <span class="pnr-label">Kode Booking (PNR)</span>
+                <span class="pnr-code">{{ booking.bookingCode }}</span>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="route-section">
+                <div class="point">
+                    <p class="airport-code">{{ booking.flight.schedule.originAirport.iataAirportCode }}</p>
+                    <p class="city-name">{{ booking.flight.schedule.originAirport.city }}</p>
+                </div>
+                <div style="flex: 1; text-align: center; color: #cbd5e1; font-size: 24px;">
+                    ✈️
+                </div>
+                <div class="point" style="text-align: right;">
+                    <p class="airport-code">{{ booking.flight.schedule.destinationAirport.iataAirportCode }}</p>
+                    <p class="city-name">{{ booking.flight.schedule.destinationAirport.city }}</p>
+                </div>
+            </div>
+
+            <div class="details-grid">
+                <div class="detail-item">
+                    <span class="detail-label">Penumpang</span>
+                    <span class="detail-value">{{ booking.client.lastName.toUpperCase() }}/{{ booking.client.firstName.toUpperCase() }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Penerbangan</span>
+                    <span class="detail-value">{{ booking.flightCall }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Waktu Keberangkatan</span>
+                    <span class="detail-value">{{ departureDate }} | {{ departureTime }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Kursi</span>
+                    <span class="detail-value">{{ booking.seatId }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Nomor Tiket</span>
+                    <span class="detail-value">{{ booking.ticketNumber }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Urutan Check-in</span>
+                    <span class="detail-value"><span class="badge-seq">#{{ String(booking.sequenceNumber).padStart(3, '0') }}</span></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="qr-section">
+            <div class="qr-info">
+                <p style="margin: 0; font-weight: 800; font-size: 16px;">Scan to Verify</p>
+                <p style="margin: 5px 0 0; font-size: 12px; color: #64748b; line-height: 1.5;">Gunakan kode ini saat melakukan self check-in di bandara atau untuk verifikasi petugas.</p>
+            </div>
+            <img class="qr-image" src="{{ qrCode }}" alt="QR Code">
+        </div>
+    </div>
+
+    <div class="footer">
+        &copy; 2026 My Flight Booking System. Dokumen ini adalah tiket elektronik sah.
+        <br>Harap tiba di bandara minimal 2 jam sebelum keberangkatan.
+    </div>
+</body>
+</html>

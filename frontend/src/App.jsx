@@ -13,6 +13,18 @@ function App() {
 
   // Cek jika sudah pernah login sebelumnya
   useEffect(() => {
+    // Check for SSO callback token in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const ssoToken = urlParams.get('token');
+
+    if (ssoToken) {
+      localStorage.setItem('token', ssoToken);
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+      fetchUser(ssoToken);
+      return;
+    }
+
     const token = localStorage.getItem('token');
     if (token) {
       fetchUser(token);

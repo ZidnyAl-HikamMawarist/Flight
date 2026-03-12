@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Plane, Search, MapPin, Calendar, Users, Star, ChevronRight, Shield, Clock, Headphones, CreditCard, Facebook, Twitter, Instagram, Mail, Phone, TrendingUp, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Navbar from './Navbar';
+import Footer from './Footer';
 
 const tokens = {
     colors: {
@@ -288,6 +290,15 @@ const LandingPage = ({ onGetStarted }) => {
 
     return (
         <div style={styles.page}>
+            <Navbar
+                user={null}
+                onGoHome={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                onLogout={() => { }}
+                onProfile={onGetStarted}
+                onHistory={onGetStarted}
+                onLogin={onGetStarted}
+            />
+
             {/* Hero Section */}
             <section style={{
                 background: tokens.colors.hero,
@@ -295,7 +306,9 @@ const LandingPage = ({ onGetStarted }) => {
                 display: 'flex',
                 alignItems: 'center',
                 position: 'relative',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                marginTop: '-76px', // Offset sticky navbar height
+                paddingTop: '76px'
             }}>
                 {/* Background accents */}
                 <div aria-hidden style={{
@@ -329,57 +342,6 @@ const LandingPage = ({ onGetStarted }) => {
                         inset: 0,
                         background: 'radial-gradient(circle at 20% 20%, rgba(255,255,255,0.20), transparent 45%), radial-gradient(circle at 80% 70%, rgba(255,255,255,0.12), transparent 50%)'
                     }} />
-                </div>
-
-                {/* Top navbar */}
-                <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    zIndex: 3,
-                    padding: '18px 0'
-                }}>
-                    <div style={{
-                        ...styles.container,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between'
-                    }}>
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 10,
-                            color: '#fff',
-                            fontWeight: 850,
-                            letterSpacing: '-0.02em'
-                        }}>
-                            <span style={{
-                                width: 40,
-                                height: 40,
-                                borderRadius: 14,
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                background: 'rgba(255,255,255,0.14)',
-                                border: '1px solid rgba(255,255,255,0.22)'
-                            }}>
-                                <Plane size={20} />
-                            </span>
-                            FlightBooking
-                        </div>
-
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <button type="button" onClick={onGetStarted} style={styles.buttonGhost}>
-                                Masuk / Daftar
-                                <ChevronRight size={18} />
-                            </button>
-                            <button type="button" onClick={onGetStarted} style={styles.buttonPrimary}>
-                                Mulai Booking
-                                <Search size={18} />
-                            </button>
-                        </div>
-                    </div>
                 </div>
 
                 <div style={{
@@ -1030,142 +992,7 @@ const LandingPage = ({ onGetStarted }) => {
                 </div>
             </section>
 
-            {/* Footer */}
-            <footer style={{
-                background: '#0b1220',
-                color: '#fff',
-                padding: '64px 0 22px'
-            }}>
-                <div style={{
-                    ...styles.container,
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                    gap: 34,
-                    marginBottom: 40
-                }}>
-                    <div style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '20px'
-                    }}>
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '10px',
-                            fontSize: '1.5rem',
-                            fontWeight: '800',
-                            marginBottom: '15px'
-                        }}>
-                            <span style={{
-                                width: 40,
-                                height: 40,
-                                borderRadius: 14,
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                background: 'rgba(255,255,255,0.08)',
-                                border: '1px solid rgba(255,255,255,0.12)'
-                            }}>
-                                <Plane size={20} color="#7dd3fc" />
-                            </span>
-                            <span style={{ color: "#e2e8f0" }}>FlightBooking</span>
-                        </div>
-                        <p style={{
-                            fontSize: '0.95rem',
-                            lineHeight: '1.6',
-                            color: 'rgba(226,232,240,0.78)',
-                            marginBottom: '20px'
-                        }}>
-                            Platform pemesanan tiket pesawat terpercaya dengan harga terbaik dan pelayanan prima.
-                        </p>
-                        <div style={{
-                            display: 'flex',
-                            gap: '15px'
-                        }}>
-                            <Facebook size={20} style={{ color: 'rgba(226,232,240,0.78)', cursor: 'pointer' }} />
-                            <Twitter size={20} style={{ color: 'rgba(226,232,240,0.78)', cursor: 'pointer' }} />
-                            <Instagram size={20} style={{ color: 'rgba(226,232,240,0.78)', cursor: 'pointer' }} />
-                        </div>
-                    </div>
-
-                    <div style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '20px'
-                    }}>
-                        <h4 style={{
-                            fontSize: '1.1rem',
-                            fontWeight: '700',
-                            color: '#fff',
-                            marginBottom: '15px'
-                        }}>Quick Links</h4>
-                        <ul style={{
-                            listStyle: 'none',
-                            padding: 0,
-                            margin: 0,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '10px'
-                        }}>
-                            <li><a href="#" style={{ color: '#ccc', textDecoration: 'none', fontSize: '0.95rem', transition: 'color 0.3s' }}>Tentang Kami</a></li>
-                            <li><a href="#" style={{ color: '#ccc', textDecoration: 'none', fontSize: '0.95rem', transition: 'color 0.3s' }}>Cara Pemesanan</a></li>
-                            <li><a href="#" style={{ color: '#ccc', textDecoration: 'none', fontSize: '0.95rem', transition: 'color 0.3s' }}>Syarat & Ketentuan</a></li>
-                            <li><a href="#" style={{ color: '#ccc', textDecoration: 'none', fontSize: '0.95rem', transition: 'color 0.3s' }}>Kebijakan Privasi</a></li>
-                        </ul>
-                    </div>
-
-                    <div style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '20px'
-                    }}>
-                        <h4 style={{
-                            fontSize: '1.1rem',
-                            fontWeight: '700',
-                            color: '#fff',
-                            marginBottom: '15px'
-                        }}>
-                            Hubungi Kami
-                        </h4>
-                        <div style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '15px'
-                        }}>
-                            <div style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '10px'
-                            }}>
-                                <Mail size={20} style={{ color: "#7dd3fc" }} />
-                                <span style={{ fontSize: '0.95rem', color: 'rgba(226,232,240,0.78)' }}>info@flightbooking.com</span>
-                            </div>
-                            <div style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '10px'
-                            }}>
-                                <Phone size={20} style={{ color: "#7dd3fc" }} />
-                                <span style={{ fontSize: '0.95rem', color: 'rgba(226,232,240,0.78)' }}>+62 21 1234 5678</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div style={{
-                    borderTop: '1px solid rgba(148,163,184,0.18)',
-                    paddingTop: '20px',
-                    textAlign: 'center'
-                }}>
-                    <p style={{
-                        fontSize: '0.9rem',
-                        color: 'rgba(226,232,240,0.60)',
-                        margin: 0
-                    }}>
-                        © 2024 FlightBooking. All rights reserved.
-                    </p>
-                </div>
-            </footer>
+            <Footer />
         </div>
     );
 };

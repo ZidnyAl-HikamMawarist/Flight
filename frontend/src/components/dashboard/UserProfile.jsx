@@ -67,10 +67,50 @@ const UserProfile = ({ user, token, onBack, onUserUpdate }) => {
         }
     };
 
+    const handleAvatarClick = () => {
+        document.getElementById('avatarInput').click();
+    };
+
+    const handleFileChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Validasi ukuran (maks 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            return toast('Ukuran file maksimal 2MB!', 'error');
+        }
+
+        const formData = new FormData();
+        formData.append('avatar', file);
+
+        setLoading(true);
+        try {
+            const res = await axios.post('http://localhost:3333/api/auth/upload-avatar', formData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            toast('Foto profil berhasil diperbarui! 📸', 'success');
+            if (onUserUpdate) onUserUpdate(res.data.user);
+        } catch (err) {
+            toast(err.response?.data?.message || 'Gagal mengunggah foto', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const avatarInitials = (user?.fullName || 'U').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
     return (
         <div style={styles.container}>
+            <input
+                type="file"
+                id="avatarInput"
+                hidden
+                accept="image/*"
+                onChange={handleFileChange}
+            />
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -91,8 +131,16 @@ const UserProfile = ({ user, token, onBack, onUserUpdate }) => {
 
                 {/* Avatar Section */}
                 <div style={styles.avatarSection}>
-                    <div style={styles.avatarCircle}>
-                        <span style={styles.avatarText}>{avatarInitials}</span>
+                    <div style={styles.avatarCircle} onClick={handleAvatarClick} title="Klik untuk ganti foto">
+                        {user?.avatarUrl ? (
+                            <img
+                                src={user.avatarUrl.startsWith('http') ? user.avatarUrl : `http://localhost:3333${user.avatarUrl}`}
+                                alt="Avatar"
+                                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                            />
+                        ) : (
+                            <span style={styles.avatarText}>{avatarInitials}</span>
+                        )}
                         <div style={styles.avatarBadge}><Camera size={14} /></div>
                     </div>
                     <div>
