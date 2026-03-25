@@ -7,9 +7,7 @@ Branch: `blackbox/project-improvements`
 - [ ] Create & switch to branch `blackbox/project-improvements`
 - [ ] Initial commit of current state
 
-### 2. Backend Cleanups
-- [ ] Remove console.error from `backend/app/controllers/bookings_controller.ts`
-- [ ] Add validation & error handling to `backend/app/controllers/admin_controller.ts`
+
 
 ### 3. Frontend New Components
 - [ ] Create `frontend/src/components/ui/ToastNotification.jsx`

@@ -8,6 +8,7 @@ import FlightSeatPrice from '#models/flight_seat_price'
 import TravelClass from '#models/travel_class'
 import FlightStatus from '#models/flight_status'
 import Booking from '#models/booking'
+import { airportStoreSchema, airportUpdateSchema, flightStoreSchema } from '#validators/admin'
 
 export default class AdminController {
     /**
