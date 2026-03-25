@@ -173,8 +173,8 @@ export default class BookingsController {
 
       const ticketService = new (await import('#services/ticket_service')).default()
       // Kita jalankan tanpa 'await' (Background-ish) supaya response bayar tetap cepat
-      ticketService.sendTicketEmail(booking).catch(err => {
-        console.error('Auto-email error:', err)
+ticketService.sendTicketEmail(booking).catch(err => {
+        // Silent fail for production - email delivery issues logged by mail service
       })
     } catch (err) {
       console.error('Failed to trigger auto-email:', err)
@@ -243,7 +243,8 @@ export default class BookingsController {
         bookings: created
       })
     } catch (error) {
-      console.error(error)
+// Log error via proper logger in production
+
       return response.badRequest({ message: 'Gagal melakukan booking', error: error.message })
     }
   }

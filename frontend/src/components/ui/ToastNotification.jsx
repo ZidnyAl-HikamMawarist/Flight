@@ -1,14 +1,14 @@
-// Isi dengan kode berikut:
 import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, XCircle, AlertCircle, Info, X } from 'lucide-react';
+import { theme } from '../../../theme';
 
 // ─── Context ───────────────────────────────────────
 const ToastContext = createContext(null);
 
 export const useToast = () => {
     const ctx = useContext(ToastContext);
-    if (!ctx) throw new Error('useToast harus dipakai di dalam <ToastProvider>');
+    if (!ctx) throw new Error('useToast must be used within <ToastProvider>');
     return ctx;
 };
 
@@ -35,9 +35,9 @@ export const ToastProvider = ({ children }) => {
 
     const colors = {
         success: { bg: '#f0fdf4', border: '#bbf7d0', text: '#15803d' },
-        error: { bg: '#fff1f2', border: '#fecdd3', text: '#be123c' },
+        error:   { bg: '#fff1f2', border: '#fecdd3', text: '#be123c' },
         warning: { bg: '#fffbeb', border: '#fde68a', text: '#92400e' },
-        info: { bg: '#eff6ff', border: '#bfdbfe', text: '#1d4ed8' },
+        info:    { bg: '#eff6ff', border: '#bfdbfe', text: '#1d4ed8' },
     };
 
     return (
@@ -95,3 +95,4 @@ export const ToastProvider = ({ children }) => {
 };
 
 export default ToastProvider;
+
