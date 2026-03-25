@@ -35,19 +35,19 @@ export default class AdminController {
         return response.ok(airports)
     }
 
-    async airportStore({ request, response }: HttpContext) {
-        const data = request.only(['iataAirportCode', 'name', 'city', 'iataCountryCode'])
+async airportStore({ request, response }: HttpContext) {
+        const data = await request.validate({ schema: airportStoreSchema })
         const airport = await Airport.create(data)
         return response.created(airport)
-    }
+      }
 
-    async airportUpdate({ params, request, response }: HttpContext) {
+async airportUpdate({ params, request, response }: HttpContext) {
+        const data = await request.validate({ schema: airportUpdateSchema })
         const airport = await Airport.findOrFail(params.code)
-        const data = request.only(['name', 'city', 'iataCountryCode'])
         airport.merge(data)
         await airport.save()
         return response.ok(airport)
-    }
+      }
 
     async airportDelete({ params, response }: HttpContext) {
         const airport = await Airport.findOrFail(params.code)
