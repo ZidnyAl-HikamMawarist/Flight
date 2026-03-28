@@ -119,6 +119,10 @@ router.group(() => {
   router.get('bookings', [AdminController, 'bookingIndex'])
   router.get('statuses', [AdminController, 'statuses'])
   router.get('aircrafts', [AdminController, 'aircrafts'])
+  // User Management
+  router.get('users', [AdminController, 'usersIndex'])
+  router.put('users/:id/role', [AdminController, 'userUpdateRole'])
+  router.delete('users/:id', [AdminController, 'userDelete'])
 }).prefix('api/admin')
 
 // Aircraft Routes

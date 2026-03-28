@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, PlaneTakeoff, MapPin, Ticket, Users, Plus, Trash2, ChevronLeft, X, Edit } from 'lucide-react';
+import { BarChart3, PlaneTakeoff, MapPin, Ticket, Users, Plus, Trash2, ChevronLeft, X, Edit, User, Users2, BarChart2, DollarSign, Search, Download, CheckBox, FileDown } from 'lucide-react';
+import Papa from 'papaparse';
+import { useToast } from '../../ui/ToastNotification';
+import { io } from 'socket.io-client';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import { 
+  Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip as ChartTooltip, Legend as ChartLegend 
+} from 'chart.js';
+import { Line as ChartLine } from 'react-chartjs-2';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { theme, ui } from '../../theme';
@@ -17,6 +28,24 @@ const AdminPanel = ({ user, onLogout }) => {
     const [editingFlight, setEditingFlight] = useState(null)
     const [seats, setSeats] = useState([]);
     const [selectedSeats, setSelectedSeats] = useState([]);
+    const [airportPage, setAirportPage] = useState(1);
+    const [airportPagination, setAirportPagination] = useState({});
+    const [flightPage, setFlightPage] = useState(1);
+    const [flightPagination, setFlightPagination] = useState({});
+    const [users, setUsers] = useState([]);
+    const [userPage, setUserPage] = useState(1);
+    const [userPagination, setUserPagination] = useState({});
+    const [chartData, setChartData] = useState([]);
+    const [searchTerm, setSearchTerm] = useState({});
+    const [selectedUsers, setSelectedUsers] = useState([]);
+    const [selectedAirports, setSelectedAirports] = useState([]);
+    const [selectedFlights, setSelectedFlights] = useState([]);
+    const [selectedBookings, setSelectedBookings] = useState([]);
+    const { toast } = useToast();
+    const [socket, setSocket] = useState(null);
+    const [lang, setLang] = useState('id');
+    const [showSettings, setShowSettings] = useState(false);
+    const [priceTemplates, setPriceTemplates] = useState({ economy: 750000, premium: 1500000 });
 
     // New airport form
     const [airportForm, setAirportForm] = useState({ iataAirportCode: '', name: '', city: '', iataCountryCode: '' });
@@ -30,17 +59,38 @@ const AdminPanel = ({ user, onLogout }) => {
         fetchStats();
         fetchStatuses();
         fetchAircrafts();
-    }, []);
+        
+        const newSocket = io('http://localhost:3333');
+        newSocket.on('new_booking', (data) => {
+            toast(`New booking: #${data.bookingId}`, 'info');
+            if (activeTab === 'bookings') fetchBookings();
+        });
+        newSocket.on('new_user', () => {
+            toast('New user registered!', 'success');
+            if (activeTab === 'users') fetchUsers();
+        });
+        setSocket(newSocket);
+        
+        return () => newSocket.close();
+    }, [toast, activeTab]);
 
     useEffect(() => {
-        if (activeTab === 'airports') fetchAirports();
-        if (activeTab === 'flights') {
-            fetchFlights();
-            // ensure airports are loaded so origin/destination selects have options
-            fetchAirports();
+        if (activeTab === 'airports') fetchAirports(airportPage);
+        if (activeTab === 'flights') fetchFlights(flightPage);
+        if (activeTab === 'bookings') fetchBookings(1);
+        if (activeTab === 'users') fetchUsers(userPage);
+    }, [activeTab, airportPage, flightPage, userPage]);
+
+    const fetchUsers = async (page = userPage) => {
+        try {
+            const res = await axios.get(`http://localhost:3333/api/admin/users?page=${page}&limit=10`);
+            setUsers(res.data.data || res.data);
+            setUserPagination(res.data.pagination || {});
+        } catch (err) { 
+            console.error(err);
+            setUsers([]);
         }
-        if (activeTab === 'bookings') fetchBookings();
-    }, [activeTab]);
+    };
 
     const fetchStats = async () => {
         try {
@@ -49,25 +99,30 @@ const AdminPanel = ({ user, onLogout }) => {
         } catch (err) { console.error(err); }
     };
 
-    const fetchAirports = async () => {
+    const fetchAirports = async (page = airportPage) => {
         try {
-            const res = await axios.get('http://localhost:3333/api/admin/airports');
-            setAirports(res.data);
+            const res = await axios.get(`http://localhost:3333/api/admin/airports?page=${page}&limit=10`);
+            setAirports(res.data.data || res.data);
+            setAirportPagination(res.data.pagination || {});
         } catch (err) { console.error(err); }
     };
 
-    const fetchFlights = async () => {
+    const fetchFlights = async (page = flightPage) => {
         try {
-            const res = await axios.get('http://localhost:3333/api/admin/flights');
-            setFlights(res.data);
+            const res = await axios.get(`http://localhost:3333/api/admin/flights?page=${page}&limit=10`);
+            setFlights(res.data.data || res.data);
+            setFlightPagination(res.data.pagination || {});
         } catch (err) { console.error(err); }
     };
 
-    const fetchBookings = async () => {
+    const fetchBookings = async (page = 1) => {
         try {
-            const res = await axios.get('http://localhost:3333/api/admin/bookings');
-            setBookings(res.data);
-        } catch (err) { console.error(err); }
+            const res = await axios.get(`http://localhost:3333/api/admin/bookings?page=${page}&limit=10`);
+            setBookings(res.data.data || res.data);
+        } catch (err) { 
+            console.error('Booking error:', err);
+            setBookings([]);
+        }
     };
 
     const fetchStatuses = async () => {
@@ -218,14 +273,90 @@ const AdminPanel = ({ user, onLogout }) => {
         } catch (err) { alert('Gagal: ' + err.message); }
     };
 
+    const handleDeleteUser = async (userId) => {
+        if (!confirm('Hapus user ini?')) return;
+        try {
+            await axios.delete(`http://localhost:3333/api/admin/users/${userId}`);
+            fetchUsers(userPage);
+            fetchStats();
+        } catch (err) { alert('Gagal hapus user: ' + err.message); }
+    };
+
+    const exportCSV = (type) => {
+        let data = [];
+        let headers = [];
+        
+        if (type === 'airports') {
+            headers = ['Kode', 'Nama', 'Kota', 'Negara'];
+            data = airports.map(ap => [ap.iataAirportCode, ap.name, ap.city, ap.iataCountryCode]);
+        } else if (type === 'flights') {
+            headers = ['Kode', 'Asal', 'Tujuan', 'Status'];
+            data = flights.map(f => [f.flightCall, f.schedule?.originAirport?.iataAirportCode, f.schedule?.destinationAirport?.iataAirportCode, f.status?.name]);
+        }
+        
+        const csv = Papa.unparse({fields: headers, data});
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `admin-${type}-${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
+    };
+
     const formatDate = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
 
+    const t = (key) => lang === 'en' ? en[key] : id[key];
+    
+    const id = {
+        dashboard: 'Dashboard',
+        users: 'Pengguna',
+        airports: 'Bandara', 
+        flights: 'Penerbangan',
+        bookings: 'Booking',
+        revenue: 'Pendapatan',
+        settings: 'Pengaturan',
+        lang: 'Bahasa'
+    };
+    
+    const en = {
+        dashboard: 'Dashboard',
+        users: 'Users',
+        airports: 'Airports',
+        flights: 'Flights',
+        bookings: 'Bookings', 
+        revenue: 'Revenue',
+        settings: 'Settings',
+        lang: 'Language'
+    };
+
     const tabs = [
-        { id: 'dashboard', label: 'Dashboard', icon: <BarChart3 size={18} /> },
-        { id: 'airports', label: 'Bandara', icon: <MapPin size={18} /> },
-        { id: 'flights', label: 'Penerbangan', icon: <PlaneTakeoff size={18} /> },
-        { id: 'bookings', label: 'Booking', icon: <Ticket size={18} /> },
+        { id: 'dashboard', label: t('dashboard'), icon: <BarChart3 size={18} /> },
+        { id: 'revenue', label: t('revenue'), icon: <DollarSign size={18} /> },
+        { id: 'live-map', label: 'Live Map', icon: <MapPin size={18} /> },
+        { id: 'users', label: t('users'), icon: <Users size={18} /> },
+        { id: 'airports', label: t('airports'), icon: <MapPin size={18} /> },
+        { id: 'flights', label: t('flights'), icon: <PlaneTakeoff size={18} /> },
+        { id: 'bookings', label: t('bookings'), icon: <Ticket size={18} /> },
+        { id: 'settings', label: t('settings'), icon: <Settings size={18} /> },
     ];
+
+    // FASE 4 Data
+    const [liveFlights, setLiveFlights] = useState([]);
+    const [revenueData, setRevenueData] = useState([]);
+
+    useEffect(() => {
+        // Mock live flight data
+        const flightMarkers = [
+            { id: 1, position: [ -6.1256, 106.6558 ], popup: 'GA402 CGK→DPS', status: 'On Time' },
+            { id: 2, position: [ -8.7482, 115.1673 ], popup: 'ID001 DPS→CGK', status: 'Delayed' },
+            { id: 3, position: [ 3.1351, 101.6869 ], popup: 'MH601 KUL→CGK', status: 'Landed' }
+        ];
+        setLiveFlights(flightMarkers);
+
+        // Mock revenue data
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'];
+        const revenue = [120, 190, 300, 500, 200, 300];
+        setRevenueData(months.map((month, i) => ({ month, revenue: revenue[i], bookings: Math.floor(revenue[i]/750000) })));
+    }, []);
 
     return (
         <div style={styles.layout}>
@@ -258,7 +389,7 @@ const AdminPanel = ({ user, onLogout }) => {
             {/* Main Content */}
             <main style={styles.main}>
                 {/* Dashboard Tab */}
-                {activeTab === 'dashboard' && (
+{activeTab === 'dashboard' && (
                     <div>
                         <h2 style={styles.pageTitle}>Dashboard</h2>
                         <div style={styles.statsGrid}>
@@ -283,6 +414,63 @@ const AdminPanel = ({ user, onLogout }) => {
                                 </motion.div>
                             ))}
                         </div>
+                        <div style={{ marginTop: 40 }}>
+                            <ResponsiveContainer width="100%" height={300}>
+                                <LineChart data={revenueData}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="month" />
+                                    <YAxis />
+                                    <Tooltip />
+                                    <Legend />
+                                    <Line type="monotone" dataKey="revenue" stroke="#8884d8" name="Pendapatan (jt)" />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'revenue' && (
+                    <div>
+                        <h2 style={styles.pageTitle}>Revenue Analytics</h2>
+                        <ChartLine data={revenueData} options={{
+                            responsive: true,
+                            plugins: { title: { display: true, text: 'Monthly Revenue vs Bookings' } }
+                        }} />
+                    </div>
+                )}
+
+                {activeTab === 'live-map' && (
+                    <div>
+                        <h2 style={styles.pageTitle}>Live Flight Tracking</h2>
+                        <div style={{ height: '70vh', width: '100%', marginTop: 20, borderRadius: 12, overflow: 'hidden' }}>
+                            <MapContainer center={[-1.2, 110]} zoom={5} style={{ height: '100%', width: '100%' }}>
+                                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                                {liveFlights.map(flight => (
+                                    <Marker key={flight.id} position={flight.position}>
+                                        <Popup>
+                                            <strong>{flight.popup}</strong><br/>
+                                            Status: <span style={{ color: flight.status === 'On Time' ? 'green' : 'orange' }}>{flight.status}</span>
+                                        </Popup>
+                                    </Marker>
+                                ))}
+                            </MapContainer>
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'settings' && (
+                    <div>
+                        <h2 style={styles.pageTitle}>Pengaturan Sistem</h2>
+                        <div style={styles.table}>
+                            <div style={{ display: 'flex', gap: 20, padding: 20 }}>
+                                <div style={{ flex: 1 }}>
+                                    <label>Templates Harga:</label>
+                                    <input type="number" value={priceTemplates.economy} onChange={(e) => setPriceTemplates({...priceTemplates, economy: parseInt(e.target.value)})} style={styles.modalInput} placeholder="Economy" />
+                                    <input type="number" value={priceTemplates.premium} onChange={(e) => setPriceTemplates({...priceTemplates, premium: parseInt(e.target.value)})} style={styles.modalInput} placeholder="Premium" />
+                                </div>
+                                <button style={styles.modalSubmit} onClick={() => toast('Settings disimpan!', 'success')}>Simpan</button>
+                            </div>
+                        </div>
                     </div>
                 )}
 
@@ -291,7 +479,10 @@ const AdminPanel = ({ user, onLogout }) => {
                     <div>
                         <div style={styles.pageHeader}>
                             <h2 style={styles.pageTitle}>Manajemen Bandara</h2>
-                            <button onClick={() => setShowModal('airport')} style={styles.addBtn}><Plus size={18} /> Tambah Bandara</button>
+                            <div style={{display: 'flex', gap: 8}}>
+                                <button onClick={() => setShowModal('airport')} style={styles.addBtn}><Plus size={18} /> Tambah</button>
+                                <button onClick={() => exportCSV('airports')} style={{...styles.addBtn, backgroundColor: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0'}}><FileDown size={18} /> CSV</button>
+                            </div>
                         </div>
                         <div style={styles.table}>
                             <div style={styles.tableHeader}>
@@ -312,6 +503,27 @@ const AdminPanel = ({ user, onLogout }) => {
                                     </span>
                                 </div>
                             ))}
+                            {airportPagination.last_page > 1 && (
+                                <div style={styles.pagination}>
+                                    <button 
+                                        onClick={() => setAirportPage(p => Math.max(1, p-1))}
+                                        disabled={airportPage === 1}
+                                        style={styles.pageBtn}
+                                    >
+                                        Sebelumnya
+                                    </button>
+                                    <span style={styles.pageInfo}>
+                                        Hal {airportPage} dari {airportPagination.last_page || 1}
+                                    </span>
+                                    <button 
+                                        onClick={() => setAirportPage(p => Math.min(airportPagination.last_page || 1, p+1))}
+                                        disabled={airportPage === (airportPagination.last_page || 1)}
+                                        style={styles.pageBtn}
+                                    >
+                                        Selanjutnya
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
@@ -321,7 +533,10 @@ const AdminPanel = ({ user, onLogout }) => {
                     <div>
                         <div style={styles.pageHeader}>
                             <h2 style={styles.pageTitle}>Manajemen Penerbangan</h2>
-                            <button onClick={() => setShowModal('flight')} style={styles.addBtn}><Plus size={18} /> Tambah Penerbangan</button>
+                            <div style={{display: 'flex', gap: 8}}>
+                                <button onClick={() => setShowModal('flight')} style={styles.addBtn}><Plus size={18} /> Tambah</button>
+                                <button onClick={() => exportCSV('flights')} style={{...styles.addBtn, backgroundColor: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0'}}><FileDown size={18} /> CSV</button>
+                            </div>
                         </div>
                         <div style={styles.table}>
                             <div style={styles.tableHeader}>
@@ -350,7 +565,7 @@ const AdminPanel = ({ user, onLogout }) => {
                 )}
 
                 {/* Bookings Tab */}
-                {activeTab === 'bookings' && (
+{activeTab === 'bookings' && (
                     <div>
                         <h2 style={styles.pageTitle}>Monitoring Booking</h2>
                         <div style={styles.table}>
@@ -376,6 +591,72 @@ const AdminPanel = ({ user, onLogout }) => {
                             ))}
                             {bookings.length === 0 && <div style={styles.emptyTable}>Belum ada booking.</div>}
                         </div>
+                        <div style={styles.pagination}>
+                            <button style={styles.pageBtn} disabled>Sebelumnya</button>
+                            <span style={styles.pageInfo}>Halaman 1</span>
+                            <button style={styles.pageBtn} disabled>Selanjutnya</button>
+                        </div>
+                    </div>
+                )}
+                {/* Users Tab */}
+                {activeTab === 'users' && (
+                    <div>
+                            <div style={styles.pageHeader}>
+                                <h2 style={styles.pageTitle}>Manajemen Pengguna</h2>
+                                {selectedUsers.length > 0 && (
+                                    <button style={styles.deleteBtn} onClick={() => {
+                                        if (confirm(`Hapus ${selectedUsers.length} user?`)) {
+                                            Promise.all(selectedUsers.map(id => axios.delete(`http://localhost:3333/api/admin/users/${id}`)))
+                                            .then(() => {
+                                                toast(`${selectedUsers.length} user terhapus!`, 'success');
+                                                fetchUsers();
+                                                setSelectedUsers([]);
+                                            })
+                                            .catch(() => toast('Gagal hapus user', 'error'));
+                                        }
+                                    }}>
+                                        Hapus Terpilih ({selectedUsers.length})
+                                    </button>
+                                )}
+                            </div>
+                        <div style={styles.table}>
+                            <div style={styles.tableHeader}>
+                                <span style={{ flex: 0.5 }}>#</span>
+                                <span style={{ flex: 2 }}>Nama</span>
+                                <span style={{ flex: 2 }}>Email</span>
+                                <span style={{ flex: 1 }}>Role</span>
+                                <span style={{ flex: 1 }}>Dibuat</span>
+                                <span style={{ flex: 1 }}>Aksi</span>
+                            </div>
+                            {users.map((u, i) => (
+                                <div key={u.id} style={styles.tableRow}>
+                                    <span style={{ flex: 0.5, fontWeight: 800 }}># {u.id}</span>
+                                    <span style={{ flex: 2 }}>{u.fullName}</span>
+                                    <span style={{ flex: 2 }}>{u.email}</span>
+                                    <span style={{ flex: 1 }}>
+                                        <span style={{
+                                            ...styles.statusTag,
+                                            backgroundColor: u.role === 'admin' ? `${theme.colors.success}20` : `${theme.colors.warning}20`,
+                                            color: u.role === 'admin' ? theme.colors.success : theme.colors.warning
+                                        }}>
+                                            {u.role}
+                                        </span>
+                                    </span>
+                                    <span style={{ flex: 1 }}>{formatDate(u.createdAt)}</span>
+                                    <span style={{ flex: 1 }}>
+                                        <button style={styles.editBtn} title="Edit Role">Edit</button>
+                                        <button onClick={() => handleDeleteUser(u.id)} style={styles.deleteBtn} title="Hapus User">Hapus</button>
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                        {userPagination.last_page > 1 && (
+                            <div style={styles.pagination}>
+                                <button onClick={() => setUserPage(p => Math.max(1, p-1))} disabled={userPage === 1} style={styles.pageBtn}>Sebelumnya</button>
+                                <span style={styles.pageInfo}>Hal {userPage} dari {userPagination.last_page}</span>
+                                <button onClick={() => setUserPage(p => Math.min(userPagination.last_page || 1, p+1))} disabled={userPage === (userPagination.last_page || 1)} style={styles.pageBtn}>Selanjutnya</button>
+                            </div>
+                        )}
                     </div>
                 )}
             </main>
@@ -507,19 +788,44 @@ const AdminPanel = ({ user, onLogout }) => {
     );
 };
 
-const styles = {
-    layout: { display: 'flex', minHeight: '100vh', fontFamily: theme.fonts.primary },
+    const styles = {
+        layout: { display: 'flex', minHeight: '100vh', fontFamily: theme.fonts.primary },
 
-    // Sidebar
-    sidebar: {
-        width: '260px',
-        background: `linear-gradient(180deg, ${theme.colors.primaryDark} 0%, ${theme.colors.primary} 100%)`,
-        color: theme.colors.surface,
-        display: 'flex',
-        flexDirection: 'column',
-        padding: '25px 15px',
-        flexShrink: 0
-    },
+        // Sidebar
+        sidebar: {
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '260px',
+            height: '100vh',
+            background: `linear-gradient(180deg, ${theme.colors.primaryDark} 0%, ${theme.colors.primary} 100%)`,
+            color: theme.colors.surface,
+            display: 'flex',
+            flexDirection: 'column',
+            padding: '25px 15px',
+            flexShrink: 0,
+            zIndex: 40,
+            overflowY: 'auto'
+        },
+        pagination: {
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: 12,
+            padding: 20,
+            backgroundColor: theme.colors.background,
+            borderTop: `1px solid ${theme.colors.border}`
+        },
+        pageBtn: {
+            ...ui.button.secondary,
+            padding: '8px 16px',
+            fontSize: theme.typography.sm
+        },
+        pageInfo: {
+            fontSize: theme.typography.sm,
+            color: theme.colors.textMuted,
+            fontWeight: theme.fontWeights.medium
+        },
     sidebarLogo: {
         display: 'flex',
         alignItems: 'center',
@@ -564,6 +870,7 @@ const styles = {
 
     // Main
     main: {
+        marginLeft: 260,
         flex: 1,
         padding: '30px 40px',
         backgroundColor: theme.colors.background,

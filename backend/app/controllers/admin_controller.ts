@@ -8,6 +8,8 @@ import FlightSeatPrice from '#models/flight_seat_price'
 import TravelClass from '#models/travel_class'
 import FlightStatus from '#models/flight_status'
 import Booking from '#models/booking'
+import User from '#models/user'
+
 
 export default class AdminController {
     /**
@@ -30,9 +32,19 @@ export default class AdminController {
     /**
      * CRUD Airports
      */
-    async airportIndex({ response }: HttpContext) {
-        const airports = await Airport.all()
-        return response.ok(airports)
+async airportIndex({ request, response }: HttpContext) {
+        const page = request.input('page', 1)
+        const limit = request.input('limit', 10)
+        const airports = await Airport.query().paginate(page, limit)
+        return response.ok({
+            data: airports.all(),
+            pagination: {
+                current_page: airports.currentPage,
+                last_page: airports.lastPage,
+                total: airports.total,
+                per_page: airports.perPage
+            }
+        })
     }
 
     async airportStore({ request, response }: HttpContext) {
@@ -58,14 +70,25 @@ export default class AdminController {
     /**
      * CRUD Schedules & Flights
      */
-    async flightIndex({ response }: HttpContext) {
-        const flights = await Flight.query()
+async flightIndex({ request, response }: HttpContext) {
+        const page = request.input('page', 1)
+        const limit = request.input('limit', 10)
+        const flightsQuery = Flight.query()
             .preload('schedule', (s) => {
                 s.preload('originAirport')
                 s.preload('destinationAirport')
             })
             .preload('status')
-        return response.ok(flights)
+        const flights = await flightsQuery.paginate(page, limit)
+        return response.ok({
+            data: flights.all(),
+            pagination: {
+                current_page: flights.currentPage,
+                last_page: flights.lastPage,
+                total: flights.total,
+                per_page: flights.perPage
+            }
+        })
     }
 
     async flightStore({ request, response }: HttpContext) {
@@ -205,8 +228,10 @@ export default class AdminController {
     /**
      * Monitoring Bookings
      */
-    async bookingIndex({ response }: HttpContext) {
-        const bookings = await Booking.query()
+async bookingIndex({ request, response }: HttpContext) {
+        const page = request.input('page', 1)
+        const limit = request.input('limit', 10)
+        const bookingsQuery = Booking.query()
             .preload('flight', (f) => {
                 f.preload('schedule', (s) => {
                     s.preload('originAirport')
@@ -216,8 +241,16 @@ export default class AdminController {
             })
             .preload('client')
             .orderBy('created_at', 'desc')
-
-        return response.ok(bookings)
+        const bookings = await bookingsQuery.paginate(page, limit)
+        return response.ok({
+            data: bookings.all(),
+            pagination: {
+                current_page: bookings.currentPage,
+                last_page: bookings.lastPage,
+                total: bookings.total,
+                per_page: bookings.perPage
+            }
+        })
     }
 
     /**
@@ -273,4 +306,39 @@ export default class AdminController {
 
         return response.ok(seatsWithAvailability)
     }
+
+    /**
+     * User Management
+     */
+    async usersIndex({ request, response }: HttpContext) {
+        const page = request.input('page', 1)
+        const limit = request.input('limit', 10)
+        const usersQuery = User.query()
+            .orderBy('created_at', 'desc')
+        const users = await usersQuery.paginate(page, limit)
+        return response.ok({
+            data: users.all(),
+            pagination: {
+                current_page: users.currentPage,
+                last_page: users.lastPage,
+                total: users.total,
+                per_page: users.perPage
+            }
+        })
+    }
+
+    async userUpdateRole({ params, request, response }: HttpContext) {
+        const user = await User.findOrFail(params.id)
+        const role = request.input('role')
+        user.role = role
+        await user.save()
+        return response.ok({ message: `Role user ${user.email} diubah ke ${role}` })
+    }
+
+    async userDelete({ params, response }: HttpContext) {
+        const user = await User.findOrFail(params.id)
+        await user.delete()
+        return response.ok({ message: `User ${user.email} dihapus` })
+    }
 }
+
