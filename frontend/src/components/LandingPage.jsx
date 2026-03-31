@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Plane, Search, MapPin, Calendar, Users, Star, ChevronRight, Shield, Clock, Headphones, CreditCard, Facebook, Twitter, Instagram, Mail, Phone, TrendingUp, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
 import Navbar from './Navbar';
 import Footer from './Footer';
 
@@ -118,41 +119,25 @@ const DESTINATIONS = [
 ];
 
 // Combobox component for searchable dropdown
-const CityCombobox = ({ value, onChange, placeholder, icon }) => {
-    const cities = [
-        { city: 'Jakarta', code: 'CGK', name: 'Soekarno-Hatta International Airport' },
-        { city: 'Bali', code: 'DPS', name: 'Ngurah Rai International Airport' },
-        { city: 'Surabaya', code: 'SUB', name: 'Juanda International Airport' },
-        { city: 'Yogyakarta', code: 'JOG', name: 'Adisutjipto International Airport' },
-        { city: 'Medan', code: 'KNO', name: 'Kualanamu International Airport' },
-        { city: 'Makassar', code: 'UPG', name: 'Sultan Hasanuddin International Airport' },
-        { city: 'Balikpapan', code: 'BPN', name: 'Sultan Aji Muhammad Sulaiman Airport' },
-        { city: 'Manado', code: 'MDC', name: 'Sam Ratulangi International Airport' },
-        { city: 'Tokyo', code: 'NRT', name: 'Narita International Airport' },
-        { city: 'Singapore', code: 'SIN', name: 'Changi Airport' },
-        { city: 'Kuala Lumpur', code: 'KUL', name: 'Kuala Lumpur International Airport' },
-        { city: 'Bangkok', code: 'BKK', name: 'Suvarnabhumi Airport' },
-        { city: 'Dubai', code: 'DXB', name: 'Dubai International Airport' },
-        { city: 'Paris', code: 'CDG', name: 'Charles de Gaulle Airport' },
-        { city: 'New York', code: 'JFK', name: 'John F. Kennedy International Airport' },
-        { city: 'London', code: 'LHR', name: 'Heathrow Airport' },
-        { city: 'Sydney', code: 'SYD', name: 'Sydney Kingsford Smith Airport' },
-    ];
-
+const CityCombobox = ({ value, onChange, placeholder, icon, airports = [] }) => {
     const [query, setQuery] = useState('');
     const [open, setOpen] = useState(false);
     const [displayValue, setDisplayValue] = useState('');
     const ref = useRef(null);
 
+    // Initial value display
     useEffect(() => {
-        if (value) {
-            const found = cities.find(c => c.code === value || c.city.toLowerCase() === value.toLowerCase());
-            if (found) setDisplayValue(`${found.city} (${found.code})`);
+        if (value && airports.length > 0) {
+            const found = airports.find(c => 
+                (c.iataAirportCode === value) || 
+                (c.city && c.city.toLowerCase() === value.toLowerCase())
+            );
+            if (found) setDisplayValue(`${found.city} (${found.iataAirportCode})`);
             else setDisplayValue(value);
-        } else {
+        } else if (!value) {
             setDisplayValue('');
         }
-    }, [value]);
+    }, [value, airports]);
 
     useEffect(() => {
         const handler = (e) => {
@@ -163,16 +148,16 @@ const CityCombobox = ({ value, onChange, placeholder, icon }) => {
     }, []);
 
     const filtered = query.trim() === ''
-        ? cities
-        : cities.filter(c =>
-            c.city.toLowerCase().includes(query.toLowerCase()) ||
-            c.code.toLowerCase().includes(query.toLowerCase()) ||
-            c.name.toLowerCase().includes(query.toLowerCase())
+        ? airports
+        : airports.filter(c =>
+            c.city?.toLowerCase().includes(query.toLowerCase()) ||
+            c.iataAirportCode?.toLowerCase().includes(query.toLowerCase()) ||
+            c.name?.toLowerCase().includes(query.toLowerCase())
         );
 
     const handleSelect = (c) => {
         onChange(c.city);
-        setDisplayValue(`${c.city} (${c.code})`);
+        setDisplayValue(`${c.city} (${c.iataAirportCode})`);
         setQuery('');
         setOpen(false);
     };
@@ -255,7 +240,7 @@ const CityCombobox = ({ value, onChange, placeholder, icon }) => {
                                 onMouseEnter={e => e.currentTarget.style.background = '#f5f7f9'}
                                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                             >
-                                <span style={{ fontWeight: 700, fontSize: 14, color: tokens.colors.brand, minWidth: 38 }}>{c.code}</span>
+                                <span style={{ fontWeight: 700, fontSize: 14, color: tokens.colors.brand, minWidth: 38 }}>{c.iataAirportCode}</span>
                                 <div>
                                     <div style={{ fontWeight: 600, fontSize: 14, color: '#0f172a' }}>{c.city}</div>
                                     <div style={{ fontSize: 12, color: '#94a3b8' }}>{c.name}</div>
@@ -277,6 +262,19 @@ const LandingPage = ({ onGetStarted }) => {
         returnDate: '',
         passengers: 1
     });
+    const [airports, setAirports] = useState([]);
+
+    useEffect(() => {
+        const fetchAirports = async () => {
+            try {
+                const res = await axios.get('http://localhost:3333/api/airports');
+                setAirports(res.data);
+            } catch (err) {
+                console.error("Gagal load bandara:", err);
+            }
+        };
+        fetchAirports();
+    }, []);
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -413,12 +411,14 @@ const LandingPage = ({ onGetStarted }) => {
                                     onChange={(val) => setSearchForm({ ...searchForm, from: val })}
                                     placeholder="Dari kota/bandara mana?"
                                     icon={<MapPin size={18} />}
+                                    airports={airports}
                                 />
                                 <CityCombobox
                                     value={searchForm.to}
                                     onChange={(val) => setSearchForm({ ...searchForm, to: val })}
                                     placeholder="Ke kota/bandara mana?"
                                     icon={<MapPin size={18} />}
+                                    airports={airports}
                                 />
                             </div>
                             <div style={{

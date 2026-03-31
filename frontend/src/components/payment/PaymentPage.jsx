@@ -155,7 +155,7 @@ const PaymentPage = ({ bookings, flight, totalAmount, onBack, onSuccess }) => {
                     <div style={styles.successDetails}>
                         <div style={styles.successRow}>
                             <span>Total Dibayar</span>
-                            <strong style={{ color: '#10b981', fontSize: 18 }}>Rp {totalAmount?.toLocaleString('id-ID') || '850.000'}</strong>
+                            <strong style={{ color: '#10b981', fontSize: 18 }}>Rp {(totalAmount ? parseInt(totalAmount) : 850000).toLocaleString('id-ID')}</strong>
                         </div>
                         <div style={styles.successRow}>
                             <span>Metode</span>
@@ -245,7 +245,7 @@ const PaymentPage = ({ bookings, flight, totalAmount, onBack, onSuccess }) => {
                     <div style={styles.summaryTotal}>
                         <span style={{ color: '#64748b' }}>Total Pembayaran</span>
                         <strong style={{ fontSize: 22, color: '#0194f3' }}>
-                            Rp {totalAmount?.toLocaleString('id-ID') || '850.000'}
+                            Rp {(totalAmount ? parseInt(totalAmount) : 850000).toLocaleString('id-ID')}
                         </strong>
                     </div>
                 </div>
@@ -346,7 +346,7 @@ const PaymentPage = ({ bookings, flight, totalAmount, onBack, onSuccess }) => {
                         }}
                     >
                         <Sparkles size={18} />
-                        Bayar Sekarang — Rp {totalAmount?.toLocaleString('id-ID') || '850.000'}
+                        Bayar Sekarang — Rp {(totalAmount ? parseInt(totalAmount) : 850000).toLocaleString('id-ID')}
                     </button>
                     {countdown === 0 && (
                         <p style={{ textAlign: 'center', color: '#ef4444', marginTop: 10, fontSize: 13, fontWeight: 700 }}>

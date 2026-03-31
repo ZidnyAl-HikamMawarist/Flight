@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, PlaneTakeoff, MapPin, Ticket, Users, Plus, Trash2, ChevronLeft, X, Edit, User, Users2, BarChart2, DollarSign, Search, Download, CheckBox, FileDown } from 'lucide-react';
+import { BarChart3, PlaneTakeoff, MapPin, Ticket, Users, Plus, Trash2, ChevronLeft, X, Edit, User, Users2, BarChart2, DollarSign, Search, Download, FileDown, Settings, MoreVertical } from 'lucide-react';
 import Papa from 'papaparse';
-import { useToast } from '../../ui/ToastNotification';
+import { useToast } from '../ui/ToastNotification';
 import { io } from 'socket.io-client';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
@@ -46,6 +46,7 @@ const AdminPanel = ({ user, onLogout }) => {
     const [lang, setLang] = useState('id');
     const [showSettings, setShowSettings] = useState(false);
     const [priceTemplates, setPriceTemplates] = useState({ economy: 750000, premium: 1500000 });
+    const [openFlightMenu, setOpenFlightMenu] = useState(null);
 
     // New airport form
     const [airportForm, setAirportForm] = useState({ iataAirportCode: '', name: '', city: '', iataCountryCode: '' });
@@ -432,10 +433,22 @@ const AdminPanel = ({ user, onLogout }) => {
                 {activeTab === 'revenue' && (
                     <div>
                         <h2 style={styles.pageTitle}>Revenue Analytics</h2>
-                        <ChartLine data={revenueData} options={{
-                            responsive: true,
-                            plugins: { title: { display: true, text: 'Monthly Revenue vs Bookings' } }
-                        }} />
+                        <div style={{ backgroundColor: '#fff', padding: '24px', borderRadius: '12px', marginTop: '20px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
+                            <ResponsiveContainer width="100%" height={350}>
+                                <LineChart data={revenueData}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: '#64748b'}} dy={10} />
+                                    <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{fill: '#64748b'}} dx={-10} />
+                                    <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{fill: '#64748b'}} dx={10} />
+                                    <Tooltip 
+                                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}
+                                    />
+                                    <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                                    <Line yAxisId="left" type="monotone" dataKey="revenue" stroke={theme.colors.primary} strokeWidth={3} dot={{r: 4}} activeDot={{r: 6}} name="Pendapatan (Juta Rp)" />
+                                    <Line yAxisId="right" type="monotone" dataKey="bookings" stroke={theme.colors.success} strokeWidth={3} dot={{r: 4}} activeDot={{r: 6}} name="Total Bookings" />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div>
                     </div>
                 )}
 
@@ -554,9 +567,53 @@ const AdminPanel = ({ user, onLogout }) => {
                                     <span style={{ flex: 1 }}>
                                         <span style={styles.statusTag}>{f.status?.name}</span>
                                     </span>
-                                    <span style={{ flex: 1 }}>
-                                        <button onClick={() => openEditFlight(f)} style={styles.editBtn} title="Edit Penerbangan"><Edit size={14} /></button>
-                                        <button onClick={() => handleDeleteFlight(f.flightCall)} style={styles.deleteBtn}><Trash2 size={14} /></button>
+                                    <span style={{ flex: 1, position: 'relative' }}>
+                                        <button 
+                                            onClick={() => setOpenFlightMenu(openFlightMenu === f.flightCall ? null : f.flightCall)} 
+                                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                        >
+                                            <MoreVertical size={16} color="#64748b" />
+                                        </button>
+                                        
+                                        {openFlightMenu === f.flightCall && (
+                                            <>
+                                                <div 
+                                                    style={{ position: 'fixed', inset: 0, zIndex: 9 }} 
+                                                    onClick={() => setOpenFlightMenu(null)}
+                                                />
+                                                <div style={{
+                                                    position: 'absolute',
+                                                    right: '25px',
+                                                    top: '10px',
+                                                    backgroundColor: '#fff',
+                                                    borderRadius: '8px',
+                                                    boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                                                    border: '1px solid #e2e8f0',
+                                                    zIndex: 10,
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    minWidth: '120px',
+                                                    overflow: 'hidden'
+                                                }}>
+                                                    <button 
+                                                        onClick={() => { openEditFlight(f); setOpenFlightMenu(null); }} 
+                                                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid #f1f5f9', fontSize: '13px', color: '#334155', width: '100%', textAlign: 'left' }}
+                                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                                    >
+                                                        <Edit size={14} color="#3b82f6" /> Edit
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => { handleDeleteFlight(f.flightCall); setOpenFlightMenu(null); }} 
+                                                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: '#ef4444', width: '100%', textAlign: 'left' }}
+                                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fef2f2'}
+                                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                                    >
+                                                        <Trash2 size={14} /> Hapus
+                                                    </button>
+                                                </div>
+                                            </>
+                                        )}
                                     </span>
                                 </div>
                             ))}
@@ -764,7 +821,7 @@ const AdminPanel = ({ user, onLogout }) => {
                                                     >
                                                         {s.seatId}
                                                         <div style={{ ...styles.seatPrice, color: isSelected ? theme.colors.surface : theme.colors.textMuted }}>
-                                                            {s.price ? `Rp ${s.price.toLocaleString('id-ID')}` : '-'}
+                                                            {s.price ? `Rp ${parseInt(s.price).toLocaleString('id-ID')}` : '-'}
                                                         </div>
                                                     </button>
                                                 );

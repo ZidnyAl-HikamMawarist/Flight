@@ -69,38 +69,49 @@ export default class extends BaseSeeder {
     // 5. Get Status
     const statusScheduled = await FlightStatus.findByOrFail('name', 'Scheduled')
 
-    // 6. Seed Schedules & Flights (banyak data)
-    const routes = [
-      { o: 'CGK', d: 'DPS' },
-      { o: 'CGK', d: 'SUB' },
-      { o: 'CGK', d: 'SIN' },
-      { o: 'CGK', d: 'KUL' },
-      { o: 'CGK', d: 'BKK' },
-      { o: 'SUB', d: 'DPS' },
-      { o: 'SUB', d: 'UPG' },
-      { o: 'DPS', d: 'SIN' },
-      { o: 'DPS', d: 'KUL' },
-      { o: 'YIA', d: 'CGK' },
-      { o: 'BDO', d: 'CGK' },
-      { o: 'KNO', d: 'CGK' },
-    ]
+    // Clean up old dynamic data to prevent "stale" flights (like old Singapore hardcoded ones)
+    // from dominating the data if the user re-seeds.
+    // We only wipe Flights and Schedules to keep the Master Data (Airports, etc) intact.
+    await Flight.query().delete()
+    await Schedule.query().delete()
+
+    // 6. Generate dynamic routes from all available airports
+    const allAirports = await Airport.all()
+    const routes = []
+    
+    // Create routes combining all existing airports in both directions
+    for(let i = 0; i < allAirports.length; i++) {
+        for(let j = i + 1; j < allAirports.length; j++) {
+            routes.push({ o: allAirports[i].iataAirportCode, d: allAirports[j].iataAirportCode })
+            routes.push({ o: allAirports[j].iataAirportCode, d: allAirports[i].iataAirportCode })
+        }
+    }
+    
+    // Shuffle routes so that the first page of results isn't dominated by a single city
+    const activeRoutes = routes.sort(() => 0.5 - Math.random());
+
+    // Fetch actual aircraft records to get valid integer IDs
+    const allAircrafts = await Aircraft.all()
 
     const carriers = [
       { prefix: 'GA', start: 401 },
       { prefix: 'SQ', start: 951 },
       { prefix: 'AK', start: 701 },
+      { prefix: 'QZ', start: 201 },
+      { prefix: 'JT', start: 301 },
     ]
 
     const base = DateTime.now().startOf('day').plus({ days: 1 })
     let flightIndex = 0
 
+    // Schedule flights over 14 days
     for (let day = 0; day < 14; day++) {
-      for (let r = 0; r < routes.length; r++) {
-        const route = routes[r]
+      for (let r = 0; r < activeRoutes.length; r++) {
+        const route = activeRoutes[r]
 
         const departHour = 6 + ((r * 2 + day) % 12) // 06.00 - 17.00
         const depart = base.plus({ days: day, hours: departHour })
-        const durationHours = 1 + ((r + day) % 3) // 1-3 jam
+        const durationHours = 1 + ((r + day) % 3) // 1-3 hours trip
         const arrive = depart.plus({ hours: durationHours, minutes: 15 })
 
         const schedule = await Schedule.updateOrCreate(
@@ -114,13 +125,19 @@ export default class extends BaseSeeder {
           }
         )
 
+        // Generate a more diverse set of flight calls to clearly show different airlines
         const carrier = carriers[flightIndex % carriers.length]
-        const flightCall = `${carrier.prefix}-${carrier.start + (flightIndex % 200)}`
+        // Unique ID format: Carrier-Day-Index to ensure no collisions
+        const flightCall = `${carrier.prefix}-${400 + (day * 100) + r}`
 
-        await Flight.updateOrCreate(
-          { flightCall },
-          { scheduleId: schedule.scheduleId, flightStatusId: statusScheduled.flightStatusId }
-        )
+        const selectedAircraft = allAircrafts[flightIndex % allAircrafts.length]
+
+        await Flight.create({
+            flightCall,
+            scheduleId: schedule.scheduleId,
+            flightStatusId: statusScheduled.flightStatusId,
+            aircraftId: selectedAircraft.aircraftId
+        })
 
         flightIndex++
       }

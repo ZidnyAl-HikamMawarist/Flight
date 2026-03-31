@@ -191,7 +191,7 @@ const BookingView = ({ flight, onBack, user, passengersCount }) => {
                                             color: classColors[currentClass] || styles.classHeader.color,
                                             borderColor: classColors[currentClass]
                                         }}>
-                                            {currentClass || 'Travel Class'} (Mulai Rp {priceByClass[currentClass]?.toLocaleString('id-ID')})
+                                            {currentClass || 'Travel Class'} (Mulai Rp {parseInt(priceByClass[currentClass] || 0).toLocaleString('id-ID')})
                                         </div>
                                     )}
                                     <div style={styles.row}>
@@ -295,7 +295,7 @@ const BookingView = ({ flight, onBack, user, passengersCount }) => {
                         <div style={styles.summaryBox}>
                             <div style={styles.sumRow}>
                                 <span>Total Harga ({passengersCount} Tiket):</span>
-                                <strong style={styles.totalPrice}>Rp {totalPrice.toLocaleString('id-ID')}</strong>
+                                <strong style={styles.totalPrice}>Rp {parseInt(totalPrice || 0).toLocaleString('id-ID')}</strong>
                             </div>
                             <div style={styles.sumRow}>
                                 <span>Kursi:</span>
@@ -307,7 +307,7 @@ const BookingView = ({ flight, onBack, user, passengersCount }) => {
                                     {selectedSeats.map(s => (
                                         <div key={s.seatId} style={{ display: 'flex', justifyContent: 'space-between' }}>
                                             <span>Kursi {s.seatId} ({s.className})</span>
-                                            <span>Rp {s.price?.toLocaleString('id-ID')}</span>
+                                            <span>Rp {parseInt(s.price || 0).toLocaleString('id-ID')}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -351,7 +351,7 @@ const SeatButton = ({ seat, selected, onToggle }) => {
                 fontSize: !seat.isAvailable ? '12px' : '10px',
                 fontWeight: !seat.isAvailable ? '800' : '700'
             }}
-            title={!seat.isAvailable ? `Terisi oleh ${seat.passengerInitials || 'Penumpang'}` : `Seat ${seat.seatId} - ${seat.className} - Rp ${(seat.price || 0).toLocaleString('id-ID')}`}
+            title={!seat.isAvailable ? `Terisi oleh ${seat.passengerInitials || 'Penumpang'}` : `Seat ${seat.seatId} - ${seat.className} - Rp ${parseInt(seat.price || 0).toLocaleString('id-ID')}`}
         >
             {seat.isAvailable ? seat.seatId : (seat.passengerInitials || 'X')}
         </button>
