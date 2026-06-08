@@ -3,6 +3,7 @@ import { Mail, Lock, ArrowRight, Plane } from 'lucide-react';
 import axios from 'axios';
 import { theme, ui } from '../../theme';
 import { useToast } from '../ui/ToastNotification';
+import { getApiUrl, API_ENDPOINTS, API_BASE_URL } from '../../config/api';
 
 const tokens = {
     hero: 'linear-gradient(135deg, #0ea5e9 0%, #2563eb 45%, #7c3aed 100%)',
@@ -22,7 +23,7 @@ const Login = ({ onSwitch, onLoginSuccess }) => {
         }
 
         try {
-            const res = await axios.post(`http://${window.location.hostname}:3333/api/auth/login`, { email, password });
+            const res = await axios.post(getApiUrl(API_ENDPOINTS.LOGIN), { email, password });
             const token = res.data.token.token;
             localStorage.setItem('token', token);
             toast('Selamat datang kembali! ✈️', 'success');
@@ -89,7 +90,7 @@ const Login = ({ onSwitch, onLoginSuccess }) => {
                 <div style={styles.ssoGroup}>
                     <button
                         type="button"
-                        onClick={() => window.location.href = `http://${window.location.hostname}:3333/api/auth/social/google/redirect`}
+                        onClick={() => window.location.href = getApiUrl(API_ENDPOINTS.SOCIAL_GOOGLE)}
                         style={{ ...styles.ssoBtn, borderColor: '#ea4335' }}
                     >
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

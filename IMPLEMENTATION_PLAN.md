@@ -32,3 +32,5 @@
 ### ✅ Fitur 6 — Review & Rating (Backend + Frontend)
 - Backend: tabel `reviews`, model, controller
 - Frontend: form review setelah booking selesai, tampilkan rating di flight card
+
+perbaiki masalah lay out buat lebih bagus dan moderen serta yang versi mobile bisa saling sambung sama database jadi bisa login dan memilih tiket penerbangan usahakan database sama yang versi website biar saling terhubung 

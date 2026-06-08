@@ -3,6 +3,7 @@ import { Plane, MapPin, Calendar, Search, ArrowRightLeft, Users, Ticket, Chevron
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { theme, ui } from '../../theme';
+import { API_ENDPOINTS, getApiUrl } from '../../config/api';
 import BookingView from './BookingView';
 import BookingHistory from './BookingHistory';
 import UserProfile from './UserProfile';
@@ -236,7 +237,7 @@ const FlightSearch = ({ onLogout, user, token, onUserUpdate }) => {
 
     const fetchAirports = async () => {
         try {
-            const res = await axios.get('http://localhost:3333/api/airports');
+            const res = await axios.get(getApiUrl(API_ENDPOINTS.AIRPORTS));
             setAirports(res.data);
             setDestinationOptions(res.data); // Default show all
         } catch (err) {
@@ -247,7 +248,9 @@ const FlightSearch = ({ onLogout, user, token, onUserUpdate }) => {
     // Filter valid destinations when origin changes
     useEffect(() => {
         if (searchParams.origin) {
-            axios.get(`http://localhost:3333/api/airports?from=${searchParams.origin}`)
+            axios.get(getApiUrl(API_ENDPOINTS.AIRPORTS), {
+                params: { from: searchParams.origin }
+            })
                 .then(res => {
                     setDestinationOptions(res.data);
                     // Clear destination if currently selected one is not in the new list
@@ -273,7 +276,7 @@ const FlightSearch = ({ onLogout, user, token, onUserUpdate }) => {
         setShowFilters(false);
         setHasSearched(true);
         try {
-            const res = await axios.get('http://localhost:3333/api/flights', {
+            const res = await axios.get(getApiUrl(API_ENDPOINTS.FLIGHTS), {
                 params: {
                     origin: searchParams.origin,
                     destination: searchParams.destination
@@ -316,9 +319,8 @@ const FlightSearch = ({ onLogout, user, token, onUserUpdate }) => {
         .sort((a, b) => {
             if (sortBy === 'time_asc') return getHourFromFlight(a) - getHourFromFlight(b);
             if (sortBy === 'time_desc') return getHourFromFlight(b) - getHourFromFlight(a);
-            // For price sort, use flight call as proxy (we don't have price in list)
-            if (sortBy === 'price_asc') return a.flightCall.localeCompare(b.flightCall);
-            if (sortBy === 'price_desc') return b.flightCall.localeCompare(a.flightCall);
+            if (sortBy === 'price_asc') return (a.minPrice || 0) - (b.minPrice || 0);
+            if (sortBy === 'price_desc') return (b.minPrice || 0) - (a.minPrice || 0);
             return 0;
         });
 

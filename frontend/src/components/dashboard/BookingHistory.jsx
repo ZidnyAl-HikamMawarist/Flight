@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import BookingDetail from './BookingDetail'
 import { theme, ui } from '../../theme'
 import ReviewForm from '../reviews/ReviewForm';
+import { API_ENDPOINTS, getApiUrl } from '../../config/api';
 
 const BookingHistory = ({ user, onBack }) => {
     const [bookings, setBookings] = useState([]);
@@ -19,7 +20,7 @@ const BookingHistory = ({ user, onBack }) => {
 
     const fetchBookings = async () => {
         try {
-            const res = await axios.get('http://localhost:3333/api/bookings/history', {
+            const res = await axios.get(getApiUrl(API_ENDPOINTS.BOOKING_HISTORY), {
                 params: { email: user?.email }
             });
             setBookings(res.data);
@@ -45,7 +46,7 @@ const BookingHistory = ({ user, onBack }) => {
     const showDetail = async (bookingId) => {
         setDetailLoading(true)
         try {
-            const res = await axios.get(`http://localhost:3333/api/bookings/${bookingId}`)
+            const res = await axios.get(getApiUrl(API_ENDPOINTS.BOOKING_DETAIL(bookingId)))
             const data = res.data
             // attach callback so modal can notify to refresh list
             data._onDeleted = fetchBookings
@@ -182,7 +183,7 @@ const BookingHistory = ({ user, onBack }) => {
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    window.open(`http://localhost:3333/api/bookings/${booking.bookingId}/pdf`, '_blank');
+                                                    window.open(getApiUrl(API_ENDPOINTS.BOOKING_PDF(booking.bookingId)), '_blank');
                                                 }}
                                                 style={{ ...styles.actionBtn, background: '#f0f9ff', color: '#0369a1', borderColor: '#bae6fd' }}
                                                 title="Download PDF"
@@ -193,7 +194,7 @@ const BookingHistory = ({ user, onBack }) => {
                                                 onClick={async (e) => {
                                                     e.stopPropagation();
                                                     try {
-                                                        await axios.post(`http://localhost:3333/api/bookings/${booking.bookingId}/send-email`);
+                                                        await axios.post(getApiUrl(API_ENDPOINTS.BOOKING_SEND_EMAIL(booking.bookingId)));
                                                         alert('Tiket sedang dikirim ke email Anda! 📧');
                                                     } catch (err) {
                                                         alert('Gagal mengirim email. Silakan coba lagi.');

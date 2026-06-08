@@ -11,9 +11,13 @@ export default class AuthController {
         const payload = await request.validateUsing(registerValidator)
         const user = await User.create(payload)
 
+        // Generate token untuk auto-login setelah register
+        const token = await User.accessTokens.create(user)
+
         return response.created({
             message: 'User berhasil didaftarkan',
-            user: user
+            user: user,
+            token: token
         })
     }
 

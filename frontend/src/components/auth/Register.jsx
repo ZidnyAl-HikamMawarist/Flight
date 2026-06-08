@@ -3,6 +3,7 @@ import { Mail, Lock, User, ArrowRight, Plane } from 'lucide-react';
 import axios from 'axios';
 import { theme, ui } from '../../theme';
 import { useToast } from '../ui/ToastNotification';
+import { getApiUrl, API_ENDPOINTS } from '../../config/api';
 
 const tokens = {
     hero: 'linear-gradient(135deg, #0ea5e9 0%, #2563eb 45%, #7c3aed 100%)',
@@ -19,7 +20,7 @@ const Register = ({ onSwitch }) => {
     const handleRegister = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:3333/api/auth/register', {
+            await axios.post(getApiUrl(API_ENDPOINTS.REGISTER), {
                 fullName,
                 email,
                 password

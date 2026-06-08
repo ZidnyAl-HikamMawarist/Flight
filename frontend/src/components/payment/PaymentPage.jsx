@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { theme, ui } from '../../theme';
 import { useToast } from '../ui/ToastNotification';
 import useIsMobile from '../../hooks/useIsMobile';
+import { API_ENDPOINTS, getApiUrl } from '../../config/api';
 
 const PAYMENT_METHODS = [
     {
@@ -105,7 +106,7 @@ const PaymentPage = ({ bookings, flight, totalAmount, onBack, onSuccess }) => {
             // Update all bookings to paid
             await Promise.all(
                 bookings.map(b =>
-                    axios.post(`http://localhost:3333/api/bookings/${b.bookingId}/pay`, {
+                    axios.post(getApiUrl(API_ENDPOINTS.BOOKING_PAY(b.bookingId)), {
                         paymentMethod: selectedMethod
                     })
                 )

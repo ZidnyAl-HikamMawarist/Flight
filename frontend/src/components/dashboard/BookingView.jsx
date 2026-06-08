@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { User, CheckCircle, ChevronLeft, Users } from 'lucide-react';
 import axios from 'axios';
 import { theme, ui } from '../../theme';
+import { API_ENDPOINTS, getApiUrl } from '../../config/api';
 import PaymentPage from '../payment/PaymentPage';
 import ETicket from '../payment/ETicket';
 import { useToast } from '../ui/ToastNotification';
@@ -32,7 +33,7 @@ const BookingView = ({ flight, onBack, user, passengersCount }) => {
 
     const fetchSeats = async () => {
         try {
-            const res = await axios.get(`http://localhost:3333/api/flights/${flight.flightCall}/seats`);
+            const res = await axios.get(getApiUrl(API_ENDPOINTS.FLIGHT_SEATS(flight.flightCall)));
             setSeats(res.data);
         } catch (err) {
             console.error("Gagal ambil kursi:", err);
@@ -74,7 +75,7 @@ const BookingView = ({ flight, onBack, user, passengersCount }) => {
                 }))
             };
 
-            const res = await axios.post('http://localhost:3333/api/bookings', payload);
+            const res = await axios.post(getApiUrl(API_ENDPOINTS.BOOKINGS), payload);
             // Store created bookings (with their IDs) for payment
             const serverBookings = res.data.bookings.map((b, i) => ({
                 bookingId: b.bookingId,

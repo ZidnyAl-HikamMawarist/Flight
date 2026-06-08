@@ -6,6 +6,7 @@ import AdminPanel from './components/admin/AdminPanel'
 import LandingPage from './components/LandingPage'
 import axios from 'axios';
 import { ToastProvider } from './components/ui/ToastNotification';
+import { getApiUrl, API_ENDPOINTS } from './config/api';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('landing');
@@ -33,7 +34,7 @@ function App() {
 
   const fetchUser = async (token) => {
     try {
-      const res = await axios.get('http://localhost:3333/api/auth/me', {
+      const res = await axios.get(getApiUrl(API_ENDPOINTS.ME), {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUser(res.data);
